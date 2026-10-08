@@ -1,0 +1,19 @@
+trace_id,subgoal_id,operator,binding,finished,fits
+09f80e7b,0,take,"{""object"": ""statue 1"", ""source"": ""sidetable 1""}",1,1
+09f80e7b,1,put,"{""object"": ""statue 1"", ""destination"": ""coffeetable 1""}",1,1
+34667f45,0,take,"{""object"": ""soapbar 2"", ""source"": ""toilet 1""}",1,1
+34667f45,1,clean,"{""object"": ""soapbar 2"", ""appliance"": ""sinkbasin 2""}",1,1
+34667f45,2,put,"{""object"": ""soapbar 2"", ""destination"": ""garbagecan 1""}",1,1
+3e1ba21d,0,take,"{""object"": ""keychain 1"", ""source"": ""sidetable 1""}",1,1
+3e1ba21d,1,use,"{""appliance"": ""desklamp 1""}",1,1
+03452d23,0,take,"{""object"": ""cup 2"", ""source"": ""diningtable 1""}",1,1
+03452d23,1,put,"{""object"": ""cup 2"", ""destination"": ""diningtable 1""}",1,1
+03452d23,2,take,{},0,1
+2c54734b,0,take,"{""object"": ""creditcard 1"", ""source"": ""sidetable 1""}",1,1
+2c54734b,1,put,"{""object"": ""creditcard 1"", ""destination"": ""desk 1""}",1,1
+3ed2fbcf,0,take,"{""object"": ""bowl 1"", ""source"": ""desk 1""}",1,1
+3ed2fbcf,1,use,"{""appliance"": ""desklamp 1""}",1,1
+57b5fcdd,0,take,"{""object"": ""mug 1"", ""source"": ""countertop 2""}",1,1
+57b5fcdd,1,heat,"{""object"": ""mug 1"", ""appliance"": ""microwave 1""}",1,1
+011eb4b3,0,take,"{""object"": ""book 1"", ""source"": ""sidetable 1""}",1,1
+011eb4b3,1,put,{},0,0

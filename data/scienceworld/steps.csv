@@ -1,0 +1,276 @@
+trace_id,step_index,subgoal_id,action,observation
+06fc1c09,0,0,teleport to outside,You teleport to the outside.
+06fc1c09,1,0,look around,"This outside location is called the outside. Here you see: 
+	the agent
+	a substance called air
+	an axe
+	a baby brown bear
+	a baby dragonfly
+	a fire pit (containing nothing)
+	a fountain (containing a substance called water)
+	the ground
+	a baby wolf
+	a substance called wood
+You also see:
+	A door to the foundry (that is open)
+	A door to the greenhouse (that is open)
+	A door to the kitchen (that is open)"
+06fc1c09,2,0,look around,"This outside location is called the outside. Here you see: 
+	the agent
+	a substance called air
+	an axe
+	a baby brown bear
+	a baby dragonfly
+	a fire pit (containing nothing)
+	a fountain (containing a substance called water)
+	the ground
+	a baby wolf
+	a substance called wood
+You also see:
+	A door to the foundry (that is open)
+	A door to the greenhouse (that is open)
+	A door to the kitchen (that is open)"
+06fc1c09,3,0,look around,"This outside location is called the outside. Here you see: 
+	the agent
+	a substance called air
+	an axe
+	a baby brown bear
+	a baby dragonfly
+	a fire pit (containing nothing)
+	a fountain (containing a substance called water)
+	the ground
+	a baby wolf
+	a substance called wood
+You also see:
+	A door to the foundry (that is open)
+	A door to the greenhouse (that is open)
+	A door to the kitchen (that is open)"
+06fc1c09,4,0,focus on baby baby brown bear,You focus on the baby brown bear.
+06fc1c09,5,1,focus on baby baby dragonfly,You focus on the baby dragonfly.
+62d48a64,0,0,look around,"This room is called the workshop. In it, you see: 
+	the agent
+	a substance called air
+	a table. On the table is: a battery, a black wire, a blue wire, a green light bulb, which is off, a orange wire, a switch, which is off, a violet light bulb, which is off, a yellow light bulb, which is off.
+	a ultra low temperature freezer. The ultra low temperature freezer door is closed. 
+You also see:
+	A door to the hallway (that is open)"
+62d48a64,1,0,pick up battery,You move the battery to the inventory.
+62d48a64,2,0,focus on battery,You focus on the battery.
+62d48a64,3,1,teleport to kitchen,You teleport to the kitchen.
+62d48a64,4,1,look around,"This room is called the kitchen. In it, you see: 
+	the agent
+	a substance called air
+	a chair. On the chair is: nothing.
+	a counter. On the counter is: a bowl (containing a red apple, a banana, an orange, a potato), a drawer.
+	a cupboard. The cupboard door is closed. 
+	a freezer. The freezer door is closed. 
+	a fridge. The fridge door is closed. 
+	a glass jar (containing a substance called sodium chloride)
+	a lighter
+	a oven, which is turned off. The oven door is closed. 
+	a painting
+	a red box (containing nothing)
+	a sink, which is turned off. In the sink is: nothing.
+	a substance called soap
+	a stopwatch, which is deactivated. 
+	a stove, which is turned off. On the stove is: nothing.
+	a table. On the table is: a glass cup (containing nothing).
+	a thermometer, currently reading a temperature of 10 degrees celsius
+You also see:
+	A door to the bathroom (that is open)
+	A door to the hallway (that is open)
+	A door to the outside (that is open)"
+62d48a64,5,1,move battery to red box,You move the battery to the red box.
+7b0f62f3,0,0,look around,"This room is called the workshop. In it, you see: 
+	the agent
+	a substance called air
+	a table. On the table is: a battery, a black wire, a blue light bulb, which is off, a blue wire, a orange light bulb, which is off, a orange wire, a red light bulb, which is off, a switch, which is off.
+	a ultra low temperature freezer. The ultra low temperature freezer door is closed. 
+You also see:
+	A door to the hallway (that is open)"
+7b0f62f3,1,0,teleport to greenhouse,You teleport to the greenhouse.
+7b0f62f3,2,0,look around,"This room is called the greenhouse. In it, you see: 
+	the agent
+	a substance called air
+	a bee hive. The bee hive door is closed. 
+	a flower pot 2 (containing a apple tree in the reproducing stage. On the apple tree you see: a flower. , soil)
+	a flower pot 3 (containing a cherry tree in the reproducing stage. On the cherry tree you see: a flower. , soil)
+	a flower pot 5 (containing a substance called water)
+	a flower pot 6 (containing a substance called water)
+	a flower pot 7 (containing a pea plant in the reproducing stage with a tall height. On the pea plant you see: a purple flower. , soil)
+	a jug (containing nothing)
+	a shovel
+	a sink, which is turned off. In the sink is: nothing.
+You also see:
+	A door to the hallway (that is open)
+	A door to the outside (that is open)"
+7b0f62f3,3,0,focus on apple tree,You focus on the apple tree.
+7b0f62f3,4,1,pick up apple tree,You move the apple tree to the inventory.
+7b0f62f3,5,2,teleport to kitchen,You teleport to the kitchen.
+7b0f62f3,6,2,move apple tree to orange box,You move the apple tree to the orange box.
+3dc89250,0,0,teleport to kitchen,You teleport to the kitchen.
+3dc89250,1,0,look around,"This room is called the kitchen. In it, you see: 
+	the agent
+	a substance called air
+	a ceramic cup (containing liquid unknown substance J)
+	a chair. On the chair is: nothing.
+	a counter. On the counter is: a bowl (containing a red apple, a banana, an orange, a potato), a drawer.
+	a cupboard. The cupboard door is closed. 
+	a freezer. The freezer door is closed. 
+	a fridge. The fridge door is closed. 
+	a glass jar (containing a substance called sodium chloride)
+	a lighter
+	a oven, which is turned off. The oven door is closed. 
+	a painting
+	a purple box (containing nothing)
+	a sink, which is turned off. In the sink is: nothing.
+	a substance called soap
+	a stopwatch, which is deactivated. 
+	a stove, which is turned off. On the stove is: nothing.
+	a table. On the table is: a glass cup (containing nothing).
+	a thermometer, currently reading a temperature of 10 degrees celsius
+	a yellow box (containing nothing)
+You also see:
+	A door to the bathroom (that is open)
+	A door to the hallway (that is open)
+	A door to the outside (that is open)"
+3dc89250,2,0,focus on thermometer,You focus on the thermometer.
+3dc89250,3,0,focus on liquid unknown substance j,You focus on the liquid unknown substance J.
+3dc89250,4,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,5,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,6,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,7,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,8,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,9,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,10,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,11,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,12,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,13,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,14,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,15,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,16,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,17,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,18,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,19,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,20,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,21,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,22,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,23,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,24,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,25,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,26,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,27,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,28,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,29,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,30,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,31,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,32,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,33,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,34,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,35,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,36,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,37,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,38,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,39,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,40,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,41,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,42,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,43,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,44,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,45,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,46,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,47,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,48,0,pick up ceramic cup containing nothing,No known action matches that input.
+3dc89250,49,0,pick up ceramic cup containing nothing,No known action matches that input.
+85171232,0,0,go to kitchen,You move to the kitchen.
+85171232,1,0,look around,"This room is called the kitchen. In it, you see: 
+	the agent
+	a substance called air
+	a chair. On the chair is: nothing.
+	a counter. On the counter is: a bowl (containing a red apple, a banana, an orange, a potato), a drawer.
+	a cupboard. The cupboard door is closed. 
+	a freezer. The freezer door is closed. 
+	a fridge. The fridge door is closed. 
+	a glass jar (containing a substance called sodium chloride)
+	a lighter
+	a orange box (containing nothing)
+	a oven, which is turned off. The oven door is closed. 
+	a painting
+	a sink, which is turned off. In the sink is: nothing.
+	a substance called soap
+	a stopwatch, which is deactivated. 
+	a stove, which is turned off. On the stove is: nothing.
+	a table. On the table is: a glass cup (containing nothing).
+	a thermometer, currently reading a temperature of 10 degrees celsius
+You also see:
+	A door to the bathroom (that is open)
+	A door to the hallway (that is open)
+	A door to the outside (that is open)"
+85171232,2,0,focus on lighter,You focus on the lighter.
+85171232,3,1,move lighter to orange box,You move the lighter to the orange box.
+a00cf715,0,0,focus on egg parrot,You focus on the parrot egg.
+a00cf715,1,1,focus on baby baby mouse,You focus on the baby mouse.
+bc55908b,0,0,go to hallway,You move to the hallway.
+bc55908b,1,0,go to workshop,You move to the workshop.
+bc55908b,2,0,pick up aluminum foil,You move the aluminum foil to the inventory.
+bc55908b,3,1,focus on aluminum foil,You focus on the aluminum foil.
+bc55908b,4,2,go to hallway,You move to the hallway.
+bc55908b,5,2,go to workshop,You move to the workshop.
+bc55908b,6,2,go to hallway,You move to the hallway.
+bc55908b,7,2,go to art studio,You move to the art studio.
+bc55908b,8,2,go to hallway,You move to the hallway.
+bc55908b,9,2,go to living room,You move to the living room.
+bc55908b,10,2,go to hallway,You move to the hallway.
+bc55908b,11,2,go to bedroom,You move to the bedroom.
+bc55908b,12,2,go to hallway,You move to the hallway.
+bc55908b,13,2,go to greenhouse,You move to the greenhouse.
+bc55908b,14,2,go to hallway,You move to the hallway.
+bc55908b,15,2,go to kitchen,You move to the kitchen.
+bc55908b,16,2,go to hallway,You move to the hallway.
+bc55908b,17,2,focus on aluminum foil,You focus on the aluminum foil.
+bc55908b,18,2,go to workshop,You move to the workshop.
+bc55908b,19,2,look around,"This room is called the workshop. In it, you see: 
+	the agent
+	a substance called air
+	a blue box (containing nothing)
+	a green box (containing nothing)
+	a table. On the table is: a battery, a black wire, a blue light bulb, which is off, a green light bulb, which is off, a red light bulb, which is off, a red wire, a switch, which is off, a yellow wire.
+	a ultra low temperature freezer. The ultra low temperature freezer door is closed. 
+You also see:
+	A door to the hallway (that is open)"
+bc55908b,20,2,move aluminum foil to green box,You move the aluminum foil to the green box.
+80a839a1,0,0,pick up thermometer,You move the thermometer to the inventory.
+80a839a1,1,1,focus on thermometer,You focus on the thermometer.
+80a839a1,2,2,look around,"This room is called the kitchen. In it, you see: 
+	the agent
+	a substance called air
+	a chair. On the chair is: nothing.
+	a counter. On the counter is: a bowl (containing a red apple, a banana, an orange, a potato), a drawer.
+	a cupboard. The cupboard door is closed. 
+	a freezer. The freezer door is closed. 
+	a fridge. The fridge door is closed. 
+	a glass jar (containing a substance called sodium chloride)
+	a lighter
+	a orange box (containing nothing)
+	a oven, which is turned off. The oven door is closed. 
+	a painting
+	a sink, which is turned off. In the sink is: nothing.
+	a substance called soap
+	a stopwatch, which is deactivated. 
+	a stove, which is turned off. On the stove is: nothing.
+	a table. On the table is: a glass cup (containing nothing).
+	a yellow box (containing nothing)
+You also see:
+	A door to the bathroom (that is open)
+	A door to the hallway (that is open)
+	A door to the outside (that is open)"
+80a839a1,3,2,open cupboard,The cupboard is now open.
+80a839a1,4,2,open freezer,The freezer is now open.
+80a839a1,5,2,focus on chocolate,No known action matches that input.
+80a839a1,6,2,move chocolate to metal pot,No known action matches that input.
+80a839a1,7,2,move metal pot to freezer,You move the metal pot to the freezer.
+80a839a1,8,2,activate stove,The stove is now activated.
+80a839a1,9,2,look at chocolate,No known action matches that input.
+80a839a1,10,2,look at chocolate,No known action matches that input.
+80a839a1,11,2,use thermometer on chocolate,No known action matches that input.
+80a839a1,12,2,focus on yellow box,You focus on the yellow box.

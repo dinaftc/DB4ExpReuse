@@ -1,0 +1,119 @@
+trace_id,step_index,subgoal_id,action,observation
+09f80e7b,0,0,look,"You are in the middle of a room. Looking quickly around you, you see nothing."
+09f80e7b,1,0,go to sidetable 1,"You arrive at sidetable 1. On the sidetable 1, you see a creditcard 1, a remotecontrol 2, a statue 1, and a television 1"
+09f80e7b,2,0,take statue 1 from sidetable 1,You pick up the statue 1 from the sidetable 1.
+09f80e7b,3,1,go to coffeetable 1,"You arrive at coffeetable 1. On the coffeetable 1, you see a laptop 1, a remotecontrol 1, a vase 1, and a watch 1."
+09f80e7b,4,1,move statue 1 to coffeetable 1,You move the statue 1 to the coffeetable 1.
+34667f45,0,0,look,"You are in the middle of a room. Looking quickly around you, you see nothing."
+34667f45,1,0,go to toilet 1,"You arrive at toilet 1. On the toilet 1, you see a soapbar 2, and a toiletpaper 2."
+34667f45,2,0,take soapbar 2 from toilet 1,You pick up the soapbar 2 from the toilet 1.
+34667f45,3,1,go to sinkbasin 2,"You arrive at sinkbasin 2. On the sinkbasin 2, you see nothing."
+34667f45,4,1,clean soapbar 2 with sinkbasin 2,You clean the soapbar 2 using the sinkbasin 2.
+34667f45,5,2,go to garbagecan 1,"You arrive at garbagecan 1. On the garbagecan 1, you see a soapbottle 1, and a spraybottle 1."
+34667f45,6,2,move soapbar 2 to garbagecan 1,You move the soapbar 2 to the garbagecan 1.
+3e1ba21d,0,0,look,"You are in the middle of a room. Looking quickly around you, you see nothing."
+3e1ba21d,1,0,go to sidetable 1,"You arrive at sidetable 1. On the sidetable 1, you see a creditcard 1, a desklamp 1, a keychain 1, a pen 2, a pen 1, and"
+3e1ba21d,2,0,take keychain 1 from sidetable 1,You pick up the keychain 1 from the sidetable 1.
+3e1ba21d,3,1,use desklamp 1,You turn on the desklamp 1.
+03452d23,0,0,look,"You are in the middle of a room. Looking quickly around you, you see nothing."
+03452d23,1,0,go to toaster 1,"You arrive at toaster 1. On the toaster 1, you see nothing."
+03452d23,2,0,go to stoveburner 1,"You arrive at stoveburner 1. On the stoveburner 1, you see nothing."
+03452d23,3,0,look,"You are facing the stoveburner 2, and stoveburner 1. Next to it, you see nothing."
+03452d23,4,0,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,5,0,go to stoveburner 2,"You arrive at stoveburner 2. On the stoveburner 2, you see a pot 1."
+03452d23,6,0,go to stoveburner 3,"You arrive at stoveburner 3. On the stoveburner 3, you see a pan 1."
+03452d23,7,0,look,"You are facing the stoveburner 4, and stoveburner 3. Next to it, you see nothing."
+03452d23,8,0,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,9,0,go to stoveburner 3,"You arrive at stoveburner 3. On the stoveburner 3, you see a pan 1."
+03452d23,10,0,look,"You are facing the stoveburner 4, and stoveburner 3. Next to it, you see nothing."
+03452d23,11,0,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,12,0,look,"You are facing the countertop 1. Next to it, you see nothing."
+03452d23,13,0,go to stoveburner 4,"You arrive at stoveburner 4. On the stoveburner 4, you see a pan 1."
+03452d23,14,0,go to diningtable 2,"You arrive at diningtable 2. On the diningtable 2, you see a apple 2, a bowl 2, a fork 1, a lettuce 2, a pot 2, a potato"
+03452d23,15,0,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,16,0,look,"You are facing the countertop 1. Next to it, you see nothing."
+03452d23,17,0,go to countertop 2,"You arrive at countertop 2. On the countertop 2, you see a mug 3, a peppershaker 3, and a plate 2."
+03452d23,18,0,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,19,0,look,"You are facing the countertop 1. Next to it, you see nothing."
+03452d23,20,0,go to countertop 2,"You arrive at countertop 2. On the countertop 2, you see a mug 3, a peppershaker 3, and a plate 2."
+03452d23,21,0,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,22,0,look,"You are facing the countertop 1. Next to it, you see nothing."
+03452d23,23,0,go to diningtable 1,"You arrive at diningtable 1. On the diningtable 1, you see a bread 1, a cup 2, a mug 1, a peppershaker 1, a plate 1, and"
+03452d23,24,0,go to countertop 2,"You arrive at countertop 2. On the countertop 2, you see a mug 3, a peppershaker 3, and a plate 2."
+03452d23,25,0,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,26,0,go to diningtable 2,"You arrive at diningtable 2. On the diningtable 2, you see a apple 2, a bowl 2, a fork 1, a lettuce 2, a pot 2, a potato"
+03452d23,27,0,look,"You are facing the diningtable 2. Next to it, you see nothing."
+03452d23,28,0,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,29,0,go to diningtable 1,"You arrive at diningtable 1. On the diningtable 1, you see a bread 1, a cup 2, a mug 1, a peppershaker 1, a plate 1, and"
+03452d23,30,0,take cup 2 from diningtable 1,You pick up the cup 2 from the diningtable 1.
+03452d23,31,1,move cup 2 to diningtable 1,You move the cup 2 to the diningtable 1.
+03452d23,32,2,look,"You are facing the diningtable 1. Next to it, you see nothing."
+03452d23,33,2,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,34,2,go to diningtable 1,"You arrive at diningtable 1. On the diningtable 1, you see a bread 1, a cup 2, a mug 1, a peppershaker 1, a plate 1, and"
+03452d23,35,2,look,"You are facing the diningtable 1. Next to it, you see nothing."
+03452d23,36,2,look,"You are facing the diningtable 1. Next to it, you see nothing."
+03452d23,37,2,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,38,2,go to diningtable 1,"You arrive at diningtable 1. On the diningtable 1, you see a bread 1, a cup 2, a mug 1, a peppershaker 1, a plate 1, and"
+03452d23,39,2,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,40,2,go to diningtable 1,"You arrive at diningtable 1. On the diningtable 1, you see a bread 1, a cup 2, a mug 1, a peppershaker 1, a plate 1, and"
+03452d23,41,2,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,42,2,go to diningtable 1,"You arrive at diningtable 1. On the diningtable 1, you see a bread 1, a cup 2, a mug 1, a peppershaker 1, a plate 1, and"
+03452d23,43,2,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,44,2,go to diningtable 1,"You arrive at diningtable 1. On the diningtable 1, you see a bread 1, a cup 2, a mug 1, a peppershaker 1, a plate 1, and"
+03452d23,45,2,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,46,2,go to diningtable 1,"You arrive at diningtable 1. On the diningtable 1, you see a bread 1, a cup 2, a mug 1, a peppershaker 1, a plate 1, and"
+03452d23,47,2,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+03452d23,48,2,go to diningtable 1,"You arrive at diningtable 1. On the diningtable 1, you see a bread 1, a cup 2, a mug 1, a peppershaker 1, a plate 1, and"
+03452d23,49,2,go to countertop 1,"You arrive at countertop 1. On the countertop 1, you see a butterknife 1, a egg 1, a knife 1, a mug 2, a potato 1, and a"
+2c54734b,0,0,take creditcard 1 from sidetable 1,You pick up the creditcard 1 from the sidetable 1.
+2c54734b,1,1,go to desk 1,"You arrive at desk 1. On the desk 1, you see a bowl 2, a bowl 1, a cellphone 1, a pen 2, a remotecontrol 3, a remotecont"
+2c54734b,2,1,move creditcard 1 to desk 1,You move the creditcard 1 to the desk 1.
+3ed2fbcf,0,0,go to sidetable 2,Nothing happens.
+3ed2fbcf,1,0,go to desk 1,"You arrive at desk 1. On the desk 1, you see a alarmclock 1, a bowl 2, a bowl 1, a cd 1, and a desklamp 1."
+3ed2fbcf,2,0,take bowl 1 from desk 1,You pick up the bowl 1 from the desk 1.
+3ed2fbcf,3,1,go to desklamp 1,Nothing happens.
+3ed2fbcf,4,1,use desklamp 1,You turn on the desklamp 1.
+57b5fcdd,0,0,go to countertop 2,"You arrive at countertop 2. On the countertop 2, you see a book 2, a bowl 3, a bread 3, a cup 1, a dishsponge 2, a egg 3"
+57b5fcdd,1,0,take mug 1 from countertop 2,You pick up the mug 1 from the countertop 2.
+57b5fcdd,2,1,go to microwave 1,"You arrive at microwave 1. The microwave 1 is open. In it, you see a potato 2."
+57b5fcdd,3,1,heat mug 1 with microwave 1,You heat the mug 1 using the microwave 1.
+011eb4b3,0,0,take book 1 from sidetable 1,You pick up the book 1 from the sidetable 1.
+011eb4b3,1,1,go to bed 1,"You arrive at bed 1. On the bed 1, you see a book 2, a cellphone 1, a laptop 3, a laptop 2, a laptop 1, and a pillow 1."
+011eb4b3,2,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,3,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,4,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,5,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,6,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,7,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,8,1,examine book 2,Nothing happens.
+011eb4b3,9,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,10,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,11,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,12,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,13,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,14,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,15,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,16,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,17,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,18,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,19,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,20,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,21,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,22,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,23,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,24,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,25,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,26,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,27,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,28,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,29,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,30,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,31,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,32,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,33,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,34,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,35,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,36,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,37,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,38,1,take book 2 from bed 1,Nothing happens.
+011eb4b3,39,1,take book 2 from bed 1,Nothing happens.

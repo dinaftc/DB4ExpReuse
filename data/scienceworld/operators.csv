@@ -1,0 +1,11 @@
+operator,form,signature,description,example
+focus on,focus on <obj>,"[""object""]",declare the object the task is scored on,(orange)
+take,pick up <obj>,"[""object"", ""source""]",pick the object up from where it is,"(thermometer, kitchen)"
+put,move <obj> to <container>,"[""object"", ""destination""]",put the held object in or on the receptacle,"(soil, flower pot)"
+pour,pour <obj> into <container>,"[""object"", ""destination""]",pour a liquid or a container's content into another container,"(yellow paint, cup)"
+mix,mix <container>,"[""container""]",mix the content of the container,(glass jar)
+activate,activate <device>,"[""device""]",turn the device on,(stove)
+deactivate,deactivate <device>,"[""device""]",turn the device off,(stove)
+measure,use <instrument> on <obj>,"[""object"", ""instrument""]",use an instrument such as the thermometer on the object,"(water, thermometer)"
+connect,connect <component> to <component>,"[""component_1"", ""component_2""]",connect two electrical components,"(wire, battery)"
+read,read <obj>,"[""object""]",read what the object shows,(instructions)

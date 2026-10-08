@@ -1,0 +1,19 @@
+trace_id,subgoal_id,operator,binding,finished,fits
+06fc1c09,0,focus on,"{""object"": ""baby baby brown bear""}",1,1
+06fc1c09,1,focus on,"{""object"": ""baby baby dragonfly""}",1,1
+62d48a64,0,focus on,"{""object"": ""battery""}",1,0
+62d48a64,1,put,"{""object"": ""battery"", ""destination"": ""red box""}",1,1
+7b0f62f3,0,focus on,"{""object"": ""apple tree""}",1,1
+7b0f62f3,1,take,"{""object"": ""apple tree""}",1,1
+7b0f62f3,2,put,"{""object"": ""apple tree"", ""destination"": ""orange box""}",1,1
+3dc89250,0,take,"{""object"": ""ceramic cup containing nothing"", ""source"": ""kitchen""}",0,0
+85171232,0,focus on,"{""object"": ""lighter""}",1,1
+85171232,1,put,"{""object"": ""lighter"", ""destination"": ""orange box""}",1,1
+a00cf715,0,focus on,"{""object"": ""egg parrot""}",1,1
+a00cf715,1,focus on,"{""object"": ""baby baby mouse""}",1,1
+bc55908b,0,take,"{""object"": ""aluminum foil""}",1,1
+bc55908b,1,focus on,"{""object"": ""aluminum foil""}",1,1
+bc55908b,2,connect,{},0,0
+80a839a1,0,take,"{""object"": ""thermometer""}",1,1
+80a839a1,1,focus on,"{""object"": ""thermometer""}",1,1
+80a839a1,2,focus on,"{""object"": ""yellow box""}",1,0

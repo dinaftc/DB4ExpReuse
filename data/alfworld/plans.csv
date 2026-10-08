@@ -1,0 +1,23 @@
+task_id,position,operator,binding
+alf-5288596b258c6af0,0,take,"{""object"": ""statue 1"", ""source"": ""sidetable 1""}"
+alf-5288596b258c6af0,1,put,"{""object"": ""statue 1"", ""destination"": ""coffeetable 1""}"
+alf-302031a9c7e31fe9,0,take,"{""object"": ""soapbar 2"", ""source"": ""toilet 1""}"
+alf-302031a9c7e31fe9,1,clean,"{""object"": ""soapbar 2"", ""appliance"": ""sinkbasin 2""}"
+alf-302031a9c7e31fe9,2,put,"{""object"": ""soapbar 2"", ""destination"": ""garbagecan 1""}"
+alf-95fe297af8fb17db,0,take,"{""object"": ""keychain 1"", ""source"": ""sidetable 1""}"
+alf-95fe297af8fb17db,1,use,"{""appliance"": ""desklamp 1""}"
+alf-5b78fdafdd0f325d,0,take,"{""object"": ""cup 2"", ""source"": ""diningtable 1""}"
+alf-5b78fdafdd0f325d,1,put,"{""object"": ""cup 2"", ""destination"": ""diningtable 1""}"
+alf-5b78fdafdd0f325d,2,take,{}
+alf-5b78fdafdd0f325d,3,put,{}
+alf-d96689633547c14f,0,take,"{""object"": ""creditcard 1"", ""source"": ""sidetable 1""}"
+alf-d96689633547c14f,1,put,"{""object"": ""creditcard 1"", ""destination"": ""desk 1""}"
+alf-e55094bb5301111b,0,take,"{""object"": ""bowl 1"", ""source"": ""desk 1""}"
+alf-e55094bb5301111b,1,use,"{""appliance"": ""desklamp 1""}"
+alf-36d19ee6112f67c8,0,take,"{""object"": ""mug 1"", ""source"": ""countertop 2""}"
+alf-36d19ee6112f67c8,1,heat,"{""object"": ""mug 1"", ""appliance"": ""microwave 1""}"
+alf-36d19ee6112f67c8,2,put,{}
+alf-9e241140d14cf640,0,take,"{""object"": ""book 1"", ""source"": ""sidetable 1""}"
+alf-9e241140d14cf640,1,put,{}
+alf-9e241140d14cf640,2,take,{}
+alf-9e241140d14cf640,3,put,{}

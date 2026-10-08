@@ -1,0 +1,34 @@
+task_id,position,operator,binding
+sci39,0,focus on,"{""object"": ""baby baby brown bear""}"
+sci39,1,focus on,"{""object"": ""baby baby dragonfly""}"
+sci51,0,focus on,"{""object"": ""battery""}"
+sci51,1,put,"{""object"": ""battery"", ""destination"": ""red box""}"
+sci20,0,focus on,"{""object"": ""apple tree""}"
+sci20,1,take,"{""object"": ""apple tree""}"
+sci20,2,put,"{""object"": ""apple tree"", ""destination"": ""orange box""}"
+sci41,0,take,{}
+sci41,1,focus on,{}
+sci41,2,take,{}
+sci41,3,focus on,{}
+sci41,4,put,{}
+sci41,5,measure,{}
+sci41,6,focus on,{}
+sci47,0,focus on,"{""object"": ""lighter""}"
+sci47,1,put,"{""object"": ""lighter"", ""destination"": ""orange box""}"
+sci114,0,focus on,"{""object"": ""egg parrot""}"
+sci114,1,focus on,"{""object"": ""baby baby mouse""}"
+sci65,0,take,"{""object"": ""aluminum foil""}"
+sci65,1,focus on,"{""object"": ""aluminum foil""}"
+sci65,2,connect,{}
+sci65,3,connect,{}
+sci65,4,connect,{}
+sci65,5,put,{}
+sci86,0,take,"{""object"": ""thermometer""}"
+sci86,1,focus on,"{""object"": ""thermometer""}"
+sci86,2,focus on,"{""object"": ""yellow box""}"
+sci86,3,put,{}
+sci86,4,activate,{}
+sci86,5,measure,{}
+sci86,6,measure,{}
+sci86,7,measure,{}
+sci86,8,focus on,{}

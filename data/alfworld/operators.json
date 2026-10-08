@@ -1,0 +1,61 @@
+[
+ {
+  "operator": "take",
+  "form": "take <obj> from <receptacle>",
+  "signature": [
+   "object",
+   "source"
+  ],
+  "description": "pick the object up from where it is",
+  "example": "(mug 2, countertop 1)"
+ },
+ {
+  "operator": "put",
+  "form": "put <obj> in/on <receptacle>",
+  "signature": [
+   "object",
+   "destination"
+  ],
+  "description": "put the held object in or on the receptacle",
+  "example": "(mug 2, cabinet 3)"
+ },
+ {
+  "operator": "heat",
+  "form": "heat <obj> with <microwave>",
+  "signature": [
+   "object",
+   "appliance"
+  ],
+  "description": "heat the held object",
+  "example": "(mug 2, microwave 1)"
+ },
+ {
+  "operator": "cool",
+  "form": "cool <obj> with <fridge>",
+  "signature": [
+   "object",
+   "appliance"
+  ],
+  "description": "cool the held object",
+  "example": "(bread 1, fridge 1)"
+ },
+ {
+  "operator": "clean",
+  "form": "clean <obj> with <sinkbasin>",
+  "signature": [
+   "object",
+   "appliance"
+  ],
+  "description": "clean the held object",
+  "example": "(plate 1, sinkbasin 1)"
+ },
+ {
+  "operator": "use",
+  "form": "use <desklamp>",
+  "signature": [
+   "appliance"
+  ],
+  "description": "turn the lamp on to look at the held object under its light",
+  "example": "(desklamp 1)"
+ }
+]

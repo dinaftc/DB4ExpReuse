@@ -1,0 +1,97 @@
+[
+ {
+  "operator": "focus on",
+  "form": "focus on <obj>",
+  "signature": [
+   "object"
+  ],
+  "description": "declare the object the task is scored on",
+  "example": "(orange)"
+ },
+ {
+  "operator": "take",
+  "form": "pick up <obj>",
+  "signature": [
+   "object",
+   "source"
+  ],
+  "description": "pick the object up from where it is",
+  "example": "(thermometer, kitchen)"
+ },
+ {
+  "operator": "put",
+  "form": "move <obj> to <container>",
+  "signature": [
+   "object",
+   "destination"
+  ],
+  "description": "put the held object in or on the receptacle",
+  "example": "(soil, flower pot)"
+ },
+ {
+  "operator": "pour",
+  "form": "pour <obj> into <container>",
+  "signature": [
+   "object",
+   "destination"
+  ],
+  "description": "pour a liquid or a container's content into another container",
+  "example": "(yellow paint, cup)"
+ },
+ {
+  "operator": "mix",
+  "form": "mix <container>",
+  "signature": [
+   "container"
+  ],
+  "description": "mix the content of the container",
+  "example": "(glass jar)"
+ },
+ {
+  "operator": "activate",
+  "form": "activate <device>",
+  "signature": [
+   "device"
+  ],
+  "description": "turn the device on",
+  "example": "(stove)"
+ },
+ {
+  "operator": "deactivate",
+  "form": "deactivate <device>",
+  "signature": [
+   "device"
+  ],
+  "description": "turn the device off",
+  "example": "(stove)"
+ },
+ {
+  "operator": "measure",
+  "form": "use <instrument> on <obj>",
+  "signature": [
+   "object",
+   "instrument"
+  ],
+  "description": "use an instrument such as the thermometer on the object",
+  "example": "(water, thermometer)"
+ },
+ {
+  "operator": "connect",
+  "form": "connect <component> to <component>",
+  "signature": [
+   "component_1",
+   "component_2"
+  ],
+  "description": "connect two electrical components",
+  "example": "(wire, battery)"
+ },
+ {
+  "operator": "read",
+  "form": "read <obj>",
+  "signature": [
+   "object"
+  ],
+  "description": "read what the object shows",
+  "example": "(instructions)"
+ }
+]

@@ -1,0 +1,9 @@
+trace_id,task_id,producer,success
+09f80e7b,alf-5288596b258c6af0,DAgger,1
+34667f45,alf-302031a9c7e31fe9,DAgger,1
+3e1ba21d,alf-95fe297af8fb17db,DAgger,1
+03452d23,alf-5b78fdafdd0f325d,DAgger,0
+2c54734b,alf-d96689633547c14f,Gemma-26B,1
+3ed2fbcf,alf-e55094bb5301111b,Gemma-26B,1
+57b5fcdd,alf-36d19ee6112f67c8,Gemma-26B,1
+011eb4b3,alf-9e241140d14cf640,Gemma-26B,0

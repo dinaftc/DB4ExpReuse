@@ -16,13 +16,15 @@ qdrant = ["qdrant-client>=1.10"]
 embeddings = ["sentence-transformers>=2.7"]
 llm = ["openai>=1.30"]
 dev = ["pytest>=8"]
+alfworld = ["alfworld>=0.4.2"]
+scienceworld = ["scienceworld>=1.2.3"]
 all = ["expreuse[postgres,qdrant,embeddings,llm,dev]"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-expreuse = ["stores/*.sql"]
+expreuse = ["stores/*.sql", "envs/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
