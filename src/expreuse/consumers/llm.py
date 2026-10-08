@@ -1,6 +1,8 @@
 """Language-model consumer: the returned experience is given as context."""
 from __future__ import annotations
 
+import re
+
 from typing import Protocol, Sequence
 
 from ..model import Experience, Plan, Task
@@ -83,5 +85,6 @@ class LLMConsumer:
 
     def act(self, history: History, admissible: Sequence[str]) -> str:
         reply = self.model.complete(self.messages(history, admissible)).strip()
-        action = reply.splitlines()[0].lstrip("> ").strip() if reply else ""
-        return action
+        match = re.search(r"ACTION:\s*(.+)", reply)
+        line = match.group(1) if match else (reply.splitlines()[0] if reply else "")
+        return line.strip().lstrip("> ").strip().strip("'\"")

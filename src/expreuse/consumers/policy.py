@@ -1,12 +1,3 @@
-"""Trained-policy consumer: inference-time shaping with returned steps.
-
-    a* = argmax_a [ log p(a | s) + lambda * Q_ITD(s, a) ]
-    Q_ITD(s, a) = sum_{j in TopM(s)} w_j [a_j = a] / sum_{j in TopM(s)} w_j
-    w_j = cosine(s, s_j)
-
-where s_j is the state preceding returned step j. A state is the task goal
-with its two preceding actions and observations.
-"""
 from __future__ import annotations
 
 from typing import Callable, Protocol, Sequence
@@ -30,11 +21,6 @@ def state_text(goal: str, previous: Sequence[tuple[str, str]]) -> str:
 
 
 class ShapedPolicy:
-    """`operator_of` maps a target-application action to its canonical operator
-    (None if it realizes none); it is required for cross-application reuse,
-    where a source step supports the admissible actions realizing the same
-    shared operator instead of an identical action string."""
-
     def __init__(self, base: BasePolicy, embedder: Embedder, m: int = 1,
                  lam: float = 1.0,
                  operator_of: Callable[[str], str | None] | None = None):

@@ -28,12 +28,30 @@ _ARTICLE = re.compile(r"^(?:a|an|some|the)\s+", re.I)
 APPLIANCES = ("microwave", "fridge", "sinkbasin", "sink")
 APPLIANCE_OF = {"heat": "microwave", "cool": "fridge", "clean": "sinkbasin", "use": "desklamp"}
 
+# The prompt of the paper's LLM runs (the static action interface: no per-step candidates, no worked examples).
+ACTION_TEMPLATES = (
+    "go to [receptacle]",
+    "open [receptacle]",
+    "close [receptacle]",
+    "take [object] from [receptacle]",
+    "move [object] to [receptacle]",
+    "clean [object] with [receptacle]",
+    "heat [object] with [appliance]",
+    "cool [object] with [appliance]",
+    "use [lamp]",
+    "examine [object or receptacle]",
+    "inventory",
+    "look",
+)
 SYSTEM_PROMPT = (
-    "You control an agent in a text household (ALFWorld). Each turn, reply with exactly one command, such as "
-    "'go to countertop 1', 'open drawer 2', 'take mug 1 from countertop 1', 'heat mug 1 with microwave 1', "
-    "'cool mug 1 with fridge 1', 'clean mug 1 with sinkbasin 1', 'put mug 1 in/on cabinet 3' or 'use desklamp 1'. "
-    "Objects must be found before they can be taken; heating, cooling and cleaning need the object in hand. "
-    "'Nothing happens.' means the command had no effect."
+    "You are an agent solving a household task in a text world. Every action has one "
+    "of these forms, with each bracket replaced by a numbered thing in this room "
+    "such as 'cabinet 2' or 'mug 1':\n"
+    + "\n".join(f"  {t}" for t in ACTION_TEMPLATES)
+    + "\nYou must go to a receptacle before you can open it, examine it, take from it "
+    "or put something in it, and an object is only named once you are at the "
+    "receptacle holding it. The environment answers 'Nothing happens.' to an action "
+    "that does not apply. Output exactly one line, 'ACTION: <the action>'."
 )
 
 

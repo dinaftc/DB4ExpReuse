@@ -9,20 +9,13 @@ from ..segmentation import StepLabeler
 
 
 class Application(Protocol):
-    """An SDM application (ALFWorld, ScienceWorld, ...).
-
-    `name` is the value stored in Task.application. `labeler` drives the
-    decomposition of traces into subtraces.
-    """
-
     name: str
     operators: OperatorLibrary
     labeler: StepLabeler
     system_prompt: str  # how an LLM consumer should act in this application
 
     def plan(self, task: Task) -> Plan:
-        """The task plan P_t with target bindings where known. Derived from the
-        goal when possible, otherwise from a scripted scan of the environment."""
+        """The task plan P_t with target bindings where known."""
 
     def reset(self, task: Task) -> str:
         """Start the task and return the initial observation."""

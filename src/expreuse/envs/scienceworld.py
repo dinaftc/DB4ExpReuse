@@ -52,12 +52,41 @@ _MOVED = re.compile(r"you move the (.+?) to the (.+?)\.", re.I)
 _FOCUS = re.compile(r"focus on the ([\w\- ]+?)[.,]", re.I)
 _WORD = re.compile(r"[a-z]+")
 
+# The instruction header of the paper's LLM runs (ReAct prompt): rooms, action grammar and the rule for 'focus on'.
 SYSTEM_PROMPT = (
-    "You control an agent in a text science lab (ScienceWorld). Each turn, reply with exactly one command, such as "
-    "'teleport to kitchen', 'look around', 'pick up thermometer', 'move lead to blast furnace', 'activate stove', "
-    "'use thermometer on water', 'pour yellow paint into cup', 'mix cup', 'connect wire to battery', 'read "
-    "instructions' or 'focus on orange'. The task is scored on the object you focus on, so focus on the exact object "
-    "the task names before transforming it. 'No known action matches that input.' means the command was not valid."
+    "Interact with the environment to solve a scientific experiment.\n"
+    "In the environment, there are several rooms: kitchen, foundry, workshop, bathroom, outside,\n"
+    "living room, bedroom, greenhouse, art studio, hallway.\n"
+    "All containers in the environment have already been opened, you can directly get items from\n"
+    "the containers.\n"
+    "The available actions are:\n"
+    "open OBJ: open a container\n"
+    "close OBJ: close a container\n"
+    "activate OBJ: activate a device\n"
+    "deactivate OBJ: deactivate a device\n"
+    "connect OBJ to OBJ: connect electrical components\n"
+    "disconnect OBJ: disconnect electrical components\n"
+    "use OBJ [on OBJ]: use a device/item\n"
+    "look around: describe the current room\n"
+    "examine OBJ: describe an object in detail\n"
+    "look at OBJ: describe a container's contents\n"
+    "read OBJ: read a note or book\n"
+    "move OBJ to OBJ: move an object to a container\n"
+    "pick up OBJ: move an object to the inventory\n"
+    "pour OBJ into OBJ: pour a liquid into a container\n"
+    "mix OBJ: chemically mix a container\n"
+    "teleport to LOC: teleport to a specific room\n"
+    "focus on OBJ: signal intent on a task object\n"
+    "wait: task no action for 10 steps\n"
+    "wait1: task no action for a step\n"
+    "For the pick up action: the command is 'pick up <OBJ>'.\n"
+    "Do not prefix the command with text.\n"
+    "You can only perform these commands. The text command you generate must be strictly compliant\n"
+    "with the command grammar. Only provide one single command in your response.\n"
+    "'focus on OBJ' declares the object the task is about: use it only on that object (the one the task\n"
+    "names, or the one you found that fits its description), and only once you have found it. Focusing\n"
+    "on anything else ends the task immediately\n"
+    "with the lowest possible score."
 )
 
 
