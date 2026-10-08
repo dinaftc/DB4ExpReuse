@@ -11,13 +11,6 @@ over it:
 - **Subtraces** returns, for each operator of the target plan, the most similar finished subtraces.
 - **Cascade** picks between the two at query time, using the similarity of the best complete trace.
 
-> **Contents.** The framework (data model, reuse queries, grounding, consumers, the three physical realizations,
-> the system benchmarks); the two applications (ALFWorld and ScienceWorld: environment wrappers, operator
-> libraries, task plans, trace segmentation rules); the two policy consumers with their training code; the
-> scripts of every experiment with their settings (`experiments/`, `src/expreuse/config.py`) and task lists
-> (`data/tasks/`); and in `data/` a sample of each application's store. The full stores, the trained policies and
-> the API keys are not included: `experiments/collect_stores.sh` rebuilds the stores by running the producers.
-
 ## Install
 
 ```bash
