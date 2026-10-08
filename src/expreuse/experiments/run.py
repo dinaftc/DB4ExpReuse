@@ -39,8 +39,10 @@ def read_records(path: Path) -> list[dict]:
 
 def open_application(args):
     if args.application == "alfworld":
-        return load_application("alfworld", split=args.split or config.APPLICATIONS["alfworld"]["split"],
-                                seed=config.SEEDS["alfworld_environment"])
+        split = args.split or config.CONSUMERS[args.consumer].get("split") or config.APPLICATIONS["alfworld"]["split"]
+        return load_application("alfworld", split=split,
+                                seed=config.SEEDS["alfworld_environment"],
+                                bindings=args.bindings or config.APPLICATIONS["alfworld"]["bindings"])
     return load_application("scienceworld")
 
 
@@ -60,6 +62,10 @@ def make_consumer(name: str, app, embedder, with_plan: bool, policy_path: str | 
                                     extra=openrouter_options(spec["providers"][app.name], config.LLM["reasoning"]),
                                     **settings)
         return LLMConsumer(model, app.system_prompt, with_plan=with_plan), model
+    if spec["kind"] == "expert":
+        from ..consumers.expert import ExpertConsumer
+
+        return ExpertConsumer(app), None
     from ..consumers.policy import ShapedPolicy
 
     if name == "dagger":
@@ -138,8 +144,11 @@ def parse(argv=None):
     p.add_argument("--theta", type=float, help="Cascade's threshold (default: config.THETA of the application)")
     p.add_argument("--k", type=int, default=config.K, help="answers per query")
     p.add_argument("--no-ground", action="store_true", help="show stored entities instead of the task's")
+    p.add_argument("--bindings", choices=["scan", "pddl", "none"],
+                   help="ALFWorld: where the plan's target entities come from (default: config, the scripted scan)")
     p.add_argument("--hide-plan", action="store_true", help="the query uses the plan but the consumer is not shown it")
-    p.add_argument("--tasks", help="task list (default: the application's evaluation list)")
+    p.add_argument("--tasks", help="task list (default: the application's evaluation list); 'all' plays every task "
+                                  "of the opened split")
     p.add_argument("--max-tasks", type=int, help="only the first tasks of the list")
     p.add_argument("--split", help="ALFWorld split the application lists (the task list decides what is played)")
     p.add_argument("--runs", type=int, help="repetitions (default: config.RUNS for a language model, 1 for a policy)")
@@ -157,8 +166,8 @@ def parse(argv=None):
 def main(argv=None):
     args = parse(argv)
     spec = config.CONSUMERS[args.consumer]
-    if spec["kind"] == "policy" and spec["application"] != args.application:
-        sys.exit(f"{args.consumer} is a policy of {spec['application']}")
+    if spec.get("application", args.application) != args.application:
+        sys.exit(f"{args.consumer} only plays {spec['application']}")
     embedder = SentenceTransformerEmbedder(config.EMBEDDER) if args.embedder == "mpnet" else HashEmbedder(768)
     app = open_application(args)
     store = open_store(args, embedder)
@@ -168,7 +177,8 @@ def main(argv=None):
                         k=args.k, ground=config.GROUND and not args.no_ground)
     consumer, model = make_consumer(args.consumer, app, embedder, not args.hide_plan, args.policy_path)
     store_as = (spec["producer"] if args.store_as == "" else args.store_as) if args.store_as is not None else None
-    tasks = read_list(args.tasks or config.APPLICATIONS[args.application]["tasks"])[: args.max_tasks]
+    tasks = app.task_ids() if args.tasks == "all" else read_list(args.tasks or config.APPLICATIONS[args.application]["tasks"])
+    tasks = tasks[: args.max_tasks]
     runs = args.runs or (config.RUNS if spec["kind"] == "llm" else 1)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

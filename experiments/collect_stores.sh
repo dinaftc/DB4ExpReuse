@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Producers' stores: every producer solves the store task list once, with its plan and without experience; the
-# traces it leaves, segmented into subtraces, are its store. One file per (application, producer).
+# Producers' stores: every producer solves the store task list once, without experience and without being shown
+# the task plan (the plan is only used to segment the trace it leaves into subtraces). One file per
+# (application, producer).
 set -euo pipefail
 cd "$(dirname "$0")/.."; source experiments/common.sh
 for app in alfworld scienceworld; do
   for consumer in gemma ministral; do
-    $RUN --application "$app" --consumer "$consumer" --mode none --runs 1 --tasks "data/tasks/${app}_store.txt" \
+    $RUN --application "$app" --consumer "$consumer" --mode none --hide-plan --runs 1 --tasks "data/tasks/${app}_store.txt" \
       --store-as --store-out "$STORES/${app}_${consumer}.jsonl" --out "$RESULTS/collect/${app}_${consumer}.jsonl"
   done
 done

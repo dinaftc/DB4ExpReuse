@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Same-application reuse: each consumer reads its own store on the evaluation tasks, under the three queries and
-# without reuse. Language models run with the plan shown and, in the no-plan setting, with the plan hidden and the
-# answers left ungrounded; the plan still shapes the Subtraces query. Policies run once (deterministic).
+# without reuse (Table 3). Language models run with the plan shown and with it hidden; the query uses the plan
+# either way, and within-application answers are grounded in both settings. Policies run once (deterministic).
 set -euo pipefail
 cd "$(dirname "$0")/.."; source experiments/common.sh
 OUT="$RESULTS/same_application"
@@ -11,7 +11,7 @@ for app in alfworld scienceworld; do
       $RUN --application "$app" --consumer "$consumer" --mode "$mode" --store "$STORES/${app}_${consumer}.jsonl" \
         --out "$OUT/${app}_${consumer}_plan_${mode}.jsonl"
       $RUN --application "$app" --consumer "$consumer" --mode "$mode" --store "$STORES/${app}_${consumer}.jsonl" \
-        --hide-plan --no-ground --out "$OUT/${app}_${consumer}_noplan_${mode}.jsonl"
+        --hide-plan --out "$OUT/${app}_${consumer}_noplan_${mode}.jsonl"
     done
   done
 done

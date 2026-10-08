@@ -76,7 +76,7 @@ plan, reuse query, grounding, acting, segmentation, and storing the new trace.
 | Task lists (evaluation, store, calibration, cross-application) | `data/tasks/` |
 | Scaling, latency, concurrency, approximate search (§4.5) | `src/expreuse/bench/` |
 | Interface an application implements | `src/expreuse/envs/base.py` |
-| ALFWorld: operators, plan and bindings from the game's PDDL, segmentation rules | `src/expreuse/envs/alfworld.py` |
+| ALFWorld: operators, plan from the goal, bindings from a room scan, PDDL confirmation, segmentation rules | `src/expreuse/envs/alfworld.py` |
 | ScienceWorld: operators (with heat and cool), plan per task type from gold traces, room scan, segmentation rules | `src/expreuse/envs/scienceworld.py`, `envs/scienceworld_plans.json` |
 | Sample of the stores (operators, tasks, plans, traces, steps, subtraces) | `data/alfworld/`, `data/scienceworld/` |
 | TextDAgger policy on ALFWorld and its training | `src/expreuse/policies/alfworld_dagger.py`, `alfworld_dagger_train.py`, `alfworld_dagger.yaml` |
@@ -89,10 +89,12 @@ the paper (install the `alfworld` or `scienceworld` extra; ALFWorld's data goes 
 needs Java). Each one lists its tasks (`task_ids()`), reads a task's goal (`task(task_id)`), derives the task plan
 (`plan(task)`) and runs the environment loop for `run_task`.
 
-- **ALFWorld**: the plan is read directly from the game's PDDL (`pddl_plan`): the expert plan in `traj_data.json`
-  gives the operators, and the PDDL problem in `game.tw-pddl` names the object, source, destination and appliance
-  of each one (the game numbers its objects deterministically from that problem, `entity_names`). These bindings
-  are what grounding substitutes into stored subtraces; no exploration of the room is needed. Subtraces close at
+- **ALFWorld**: the plan's operators are derived from the goal text (`goal_operators`); the game's expert PDDL
+  plan only confirms that mapping (`python -m expreuse.envs.alfworld confirm-plans --tasks <list>`). The target
+  bindings that grounding substitutes into stored subtraces come from a scripted scan of the room (`bindings="scan"`,
+  the default; the scan is not charged to the step budget). `bindings="pddl"` reads them from the expert plan
+  instead, which tells the consumer where the solution's objects are; `bindings="none"` leaves the plan unbound.
+  Subtraces close at
   the milestone actions take, put, heat, cool, clean and use.
 - **ScienceWorld**: one plan per task type, derived from the benchmark's gold traces of training variations
   (`python -m expreuse.envs.scienceworld build-plans`, table in `envs/scienceworld_plans.json`); the type of a new
@@ -180,12 +182,12 @@ time per component and tokens, with paired differences, wins and losses against 
 
 | Script | Experiment |
 |---|---|
-| `collect_stores.sh` | the producers solve the store task lists once (plan shown, no experience); their traces are the stores |
-| `same_application.sh` | each consumer with its own store: no reuse, Whole, Subtraces, Cascade; language models with the plan shown and in the no-plan setting (plan hidden, answers ungrounded) |
-| `cross_agent.sh` | a consumer reads another producer's store |
-| `cross_application.sh` | ALFWorld consumers read ScienceWorld traces and the reverse, on the tasks with shared operators, ungrounded; the same-application answers on those tasks are the reference |
-| `ablations.sh` | Cascade's threshold (`theta_sweep`, assembled from the Whole, Subtraces and no-reuse runs), retrieval depth K, partial subtrace coverage (`--withhold`, every subset on ALFWorld, one nested random ordering per task on ScienceWorld), grounding on and off |
-| `systems.sh` | the physical realizations: latency as the store grows, throughput under concurrent clients, approximate goal search |
+| `collect_stores.sh` | the producers solve the store task lists once (plan hidden, no experience); their traces are the stores |
+| `same_application.sh` | each consumer with its own store: no reuse, Whole, Subtraces, Cascade; language models with the plan shown and with it hidden; answers are grounded in both (Table 3) |
+| `cross_agent.sh` | Gemma (plan shown and hidden) reads the policy's store and each policy reads Gemma's (Table 4) |
+| `cross_application.sh` | consumers of one application read traces of the other on the tasks with shared operators, ungrounded, with Whole and Subtraces, plus the no-reuse baselines on those tasks (Table 5) |
+| `ablations.sh` | Cascade's threshold (Table 7: played at every theta by Gemma, assembled exactly by `theta_sweep` for the policies), retrieval depth K, partial subtrace coverage (Figure 4: `--withhold`, every subset on ALFWorld, one nested random ordering per task on ScienceWorld), grounding on and off on ALFWorld |
+| `systems.sh` | the physical realizations: collects the base store (ALFWorld's handcoded expert on the public training games, about 3.6K traces), then latency as it is grown to 1M subtraces, throughput under concurrent clients, approximate goal search |
 
 ```bash
 export OPENROUTER_API_KEY=...        # Gemma; Ministral is served by Amazon Bedrock from the AWS environment
@@ -215,7 +217,9 @@ The settings live in `src/expreuse/config.py`; a command-line option of `run` ov
 per producer and application. The scaling store of the system benchmarks (about 3.6K ALFWorld traces, grown
 synthetically to a million subtraces) was produced the same way by two further agents, a DeepSeek model and
 Ministral 3B, on ALFWorld's public training games (the `train` split of the `json_2.1.1` data distributed with
-[ALFWorld](https://github.com/alfworld/alfworld)); `systems.sh` grows any producer's store in its place.
+[ALFWorld](https://github.com/alfworld/alfworld)). Those two producers are not configured here: `systems.sh`
+rebuilds a base store of the same size on the same games with ALFWorld's handcoded expert (`--consumer expert`),
+or starts from any trace file given as `TRACES`.
 
 ## Adding an application
 

@@ -16,7 +16,7 @@ GROUND = True  # within-application answers are grounded; cross-application answ
 # Ablation levels
 K_LEVELS = {"llm": (1, 2, 4, 8), "policy": (1, 2, 4, 8, 16)}
 COVERAGE_LEVELS = (0.0, 0.25, 0.5, 0.75, 1.0)  # share of the answer's subtraces withheld
-THETA_LEVELS = (0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95)
+THETA_LEVELS = (0.5, 0.6, 0.7, 0.8, 0.9)
 
 # Repetitions and seeds
 RUNS = 3  # repetitions of every LLM condition; a trained policy is deterministic and runs once
@@ -27,6 +27,7 @@ APPLICATIONS = {
     "alfworld": {
         "split": "eval_out_of_distribution",  # the 134 valid_unseen games
         "max_steps": 40,
+        "bindings": "scan",  # plan operators from the goal text; target entities from the scripted scan
         "tasks": "data/tasks/alfworld_evaluation.txt",
         "store_tasks": "data/tasks/alfworld_store.txt",  # training games the producers' traces come from
         "calibration_tasks": "data/tasks/alfworld_valid_seen.txt",  # theta and the policy's temperature
@@ -54,6 +55,8 @@ CONSUMERS = {
                   "bedrock_model_id": "mistral.ministral-3-8b-instruct"},
     "dagger": {"kind": "policy", "producer": "DAgger", "application": "alfworld",
                "checkpoint": "data/models/alfworld_dagger/dagger_admissible_id.pt"},
+    # ALFWorld's handcoded expert on the public training games: the base traces of the scaling experiments
+    "expert": {"kind": "expert", "producer": "expert", "application": "alfworld", "split": "train"},
     "imitation": {"kind": "policy", "producer": "imitation", "application": "scienceworld",
                   "directory": "data/models/scienceworld_imitation"},
 }

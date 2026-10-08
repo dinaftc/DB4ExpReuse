@@ -14,8 +14,8 @@ are in `tasks/` (see `tasks/README.md`).
 
 A subtrace is the steps of a trace that share a `subgoal_id`, the position of its operator in the task plan.
 `finished` is 1 when the environment carried out the operator; `fits` is 1 when the subtrace contains only the
-steps of its own operator. `plans.csv` gives each task's plan with its target bindings: on ALFWorld those read
-from the game's PDDL, on ScienceWorld those read from the task description (the room scan adds the rest at run
+steps of its own operator. `plans.csv` gives each task's plan with target bindings: on ALFWorld those of the
+game's expert PDDL plan (`bindings="pddl"`; the experiments bind from a room scan instead), on ScienceWorld those read from the task description (the room scan adds the rest at run
 time).
 
 ```python

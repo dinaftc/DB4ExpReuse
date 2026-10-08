@@ -8,7 +8,9 @@ import pytest
 
 from expreuse import ReuseRequest
 from expreuse.embedding import HashEmbedder
-from expreuse.envs.alfworld import AlfworldLabeler, entity_names, goal_entities, pddl_plan, task_parameters
+from expreuse.envs.alfworld import (AlfworldLabeler, confirm_plans, entity_names, goal_entities, goal_operators,
+                                    pddl_plan, task_parameters)
+from expreuse.envs import alfworld as alfworld_module
 from expreuse.envs.scienceworld import ScienceWorldLabeler, _room_contents, bind_plan, plan_operators, task_type
 from expreuse.io import read_jsonl
 from expreuse.model import PlanStep
@@ -61,6 +63,39 @@ def test_alfworld_plan_from_pddl(tmp_path):
                                PlanStep("put", {"object": "mug 1", "destination": "cabinet 1"}))
     assert task_parameters(game) == {"object": "mug", "destination": "cabinet", "appliance": ""}
     assert goal_entities("put a hot cup in cabinet") == ("cup", "cabinet")
+
+
+def test_alfworld_plan_from_the_goal():
+    goals = {"put some creditcard on desk.": ("take", "put"),
+             "heat some mug and put it in coffeemachine.": ("take", "heat", "put"),
+             "put a hot cup in cabinet": ("take", "heat", "put"),
+             "cool some bread and put it in countertop.": ("take", "cool", "put"),
+             "clean some soapbar and put it in garbagecan.": ("take", "clean", "put"),
+             "put two book in drawer.": ("take", "put", "take", "put"),
+             "find two cup and put them in microwave.": ("take", "put", "take", "put"),
+             "look at bowl under the desklamp.": ("take", "use"),
+             "examine the keychain with the desklamp.": ("take", "use")}
+    for goal, operators in goals.items():
+        assert goal_operators(goal) == operators, goal
+
+
+def test_alfworld_bindings_from_the_scan():
+    room = {"countertop 1": ["bread 1", "mug 2"], "microwave 1": [], "cabinet 1": [], "cabinet 2": ["mug 1"]}
+    plan = alfworld_module.bind_plan(("take", "heat", "put"), "put a hot mug in cabinet", room)
+    assert plan == (PlanStep("take", {"object": "mug 2", "source": "countertop 1"}),
+                    PlanStep("heat", {"object": "mug 2", "appliance": "microwave 1"}),
+                    PlanStep("put", {"object": "mug 2", "destination": "cabinet 1"}))
+    unseen = alfworld_module.bind_plan(("take", "put"), "put a statue in coffeetable", {"shelf 1": []})
+    assert unseen == (PlanStep("take"), PlanStep("put"))
+
+
+def test_alfworld_pddl_confirms_the_goal_plan(tmp_path, monkeypatch):
+    (tmp_path / "game.tw-pddl").write_text(json.dumps({"pddl_problem": PROBLEM}))
+    (tmp_path / "traj_data.json").write_text(json.dumps(EXPERT))
+    monkeypatch.setattr(alfworld_module, "DATA", tmp_path)
+    assert confirm_plans(["game.tw-pddl"], {"game.tw-pddl": "put a hot mug in cabinet"}) == []
+    assert confirm_plans(["game.tw-pddl"], {"game.tw-pddl": "put a mug in cabinet"}) == [
+        ("game.tw-pddl", ("take", "put"), ("take", "heat", "put"))]
 
 
 def test_alfworld_labeler():

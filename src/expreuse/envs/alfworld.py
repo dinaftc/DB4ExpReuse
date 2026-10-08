@@ -1,13 +1,20 @@
 """ALFWorld (Shridhar et al., 2021): text household tasks of six types, one room each.
 
 Operators are the milestone actions of the game (take, put, heat, cool, clean, use); navigation and opening are
-setup steps of the operator they precede. The task plan is read directly from the game's PDDL: the expert plan in
-`traj_data.json` gives the operators, and the PDDL problem in `game.tw-pddl` names the objects they act on (the
-game numbers its objects deterministically from that problem), so the plan's bindings are exact and no exploration
-of the room is needed. Grounding substitutes these entities for those of the stored subtraces.
+setup steps of the operator they precede. The task plan's operators are derived from the goal text
+(`goal_operators`); the expert plan in the game's PDDL is only used to confirm that mapping (`confirm_plans`).
+The plan's bindings, which grounding substitutes for the entities of the stored subtraces, come from a scripted
+scan of the room (every receptacle visited and opened, not charged to the task's step budget).
+
+    python -m expreuse.envs.alfworld confirm-plans --tasks data/tasks/alfworld_evaluation.txt
+
+`bindings="pddl"` instead reads the bindings from the game's expert plan and PDDL problem. Those are the objects
+and locations of the task's solution, so that setting gives the consumer oracle information; `bindings="none"`
+leaves the plan unbound (grounding then changes nothing).
 """
 from __future__ import annotations
 
+import argparse
 import collections
 import json
 import os
@@ -20,6 +27,8 @@ from ..operators import ALFWORLD as OPERATORS
 
 DATA = Path(os.environ.get("ALFWORLD_DATA", os.path.expanduser("~/.cache/alfworld")))
 MAX_STEPS = 40
+SCAN_BUDGET = 30  # receptacles visited by the scan
+BINDINGS = ("scan", "pddl", "none")
 PLANNER_OPERATORS = {"PickupObject": "take", "PutObject": "put", "HeatObject": "heat", "CoolObject": "cool",
                      "CleanObject": "clean", "ToggleObject": "use"}
 
@@ -28,6 +37,9 @@ _PUT = re.compile(r"^\s*(?:put|move)\s+(.+?)\s+(?:in/on|into|in|on|to)\s+(.+?)\s
 _TRANSFORM = re.compile(r"^\s*(cool|heat|clean)\s+(.+?)\s+with\s+(.+?)\s*$", re.I)
 _USE = re.compile(r"^\s*use\s+(.+?)\s*$", re.I)
 _GOAL = re.compile(r"your task is to:\s*(.+)", re.I)
+_SEE = re.compile(r"you see (.+?)\.?\s*$", re.I)
+_ARTICLE = re.compile(r"^(?:a|an|some|the)\s+", re.I)
+APPLIANCE_OF = {"heat": "microwave", "cool": "fridge", "clean": "sinkbasin", "use": "desklamp"}
 APPLIANCES = ("microwave", "fridge", "sinkbasin", "sink")
 
 # The static action interface shown to an LLM consumer: the action forms, no per-step list of valid actions.
@@ -71,9 +83,20 @@ def goal_text(observation: str) -> str:
     return match.group(1).strip() if match else observation.strip()
 
 
+def goal_operators(goal: str) -> tuple[str, ...]:
+    """The task plan's operators, from the goal text: the task type it states."""
+    g = goal.lower()
+    if any(k in g for k in ("desklamp", "lamp", "look at", "examine")):
+        return ("take", "use")
+    if re.search(r"\btwo\b", g):
+        return ("take", "put", "take", "put")
+    middle = [op for op, keys in (("clean", ("clean",)), ("heat", ("hot", "heat")), ("cool", ("cool", "cold")))
+              if any(re.search(rf"\b{k}", g) for k in keys)]
+    return ("take", *middle, "put")
+
+
 def goal_entities(goal: str) -> tuple[str | None, str | None]:
-    """(object type, destination type) named by the goal text, e.g. ('mug', 'cabinet'); used for stored traces
-    whose game files are not at hand."""
+    """(object type, destination type) named by the goal text, e.g. ('mug', 'cabinet')."""
     g = goal.lower().rstrip(".")
     destination = re.search(r"\b(?:in|on|into)\s+(?:the\s+)?(\w+)", g)
     if any(k in g for k in ("desklamp", "lamp", "look at", "examine")):
@@ -83,7 +106,44 @@ def goal_entities(goal: str) -> tuple[str | None, str | None]:
     return (obj.group(1) if obj else None), (destination.group(1) if destination else None)
 
 
-# ---------------------------------------------------------------- the plan, from the game's PDDL
+# ---------------------------------------------------------------- bindings from the scanned room
+
+def _contents(observation: str) -> list[str]:
+    match = _SEE.search(observation.strip())
+    if not match or "nothing" in match.group(1).lower():
+        return []
+    return [o for o in (_ARTICLE.sub("", p).strip() for p in re.split(r",\s*|\s+and\s+", match.group(1))) if o]
+
+
+def bind_plan(operators: Sequence[str], goal: str, room: dict[str, list[str]] | None) -> Plan:
+    """Target bindings from the scanned room: the goal's object where the scan saw it, the destination of the
+    goal's type, and the appliance each transform needs. Unknown entities leave the role unbound."""
+    object_type, destination_type = goal_entities(goal)
+    room = room or {}
+    objects = [(obj, place) for place, contents in room.items() for obj in contents
+               if object_type and _type(obj) == object_type]
+    receptacles = {}
+    for place in room:
+        receptacles.setdefault(_type(place), place)
+    plan, used = [], 0
+    for operator in operators:
+        binding: dict[str, str] = {}
+        if operator in ("take", "put", "heat", "cool", "clean") and objects:
+            obj, place = objects[min(used, len(objects) - 1)]
+            binding["object"] = obj
+            if operator == "take":
+                binding["source"] = place
+        if operator == "put":
+            used += 1
+            if destination_type and destination_type in receptacles:
+                binding["destination"] = receptacles[destination_type]
+        if operator in APPLIANCE_OF and APPLIANCE_OF[operator] in receptacles:
+            binding["appliance"] = receptacles[APPLIANCE_OF[operator]]
+        plan.append(PlanStep(operator, binding))
+    return tuple(plan)
+
+
+# ---------------------------------------------------------------- the expert plan of the game's PDDL
 
 def mangle(object_id: str) -> str:
     """A simulator object id ('Apple|-00.59|+00.83|-00.40') as the object's name in the game's PDDL."""
@@ -216,10 +276,12 @@ class AlfworldApplication:
     operators = OPERATORS
     system_prompt = SYSTEM_PROMPT
 
-    def __init__(self, split: str = "eval_out_of_distribution", seed: int = 42):
+    def __init__(self, split: str = "eval_out_of_distribution", seed: int = 42, bindings: str = "scan"):
         from alfworld.agents.environment import get_environment
 
-        self.split, self.seed = split, seed
+        if bindings not in BINDINGS:
+            raise ValueError(f"bindings must be one of {BINDINGS}")
+        self.split, self.seed, self.bindings = split, seed, bindings
         self.labeler = AlfworldLabeler()
         self._config = {
             "dataset": {"data_path": str(DATA / "json_2.1.1/train"), "eval_id_data_path": str(DATA / "json_2.1.1/valid_seen"),
@@ -249,14 +311,43 @@ class AlfworldApplication:
             self._env = self._tw.init_env(batch_size=1)
             self._loaded = task_id
         observations, info = self._env.reset()
-        self._info = {"admissible_commands": info["admissible_commands"][0], "won": bool(info.get("won", [False])[0])}
+        self._info = self._read(info)
         return observations[0]
 
+    @staticmethod
+    def _read(info) -> dict:
+        return {"admissible_commands": info["admissible_commands"][0], "won": bool(info.get("won", [False])[0]),
+                "expert_plan": list((info.get("extra.expert_plan") or [[]])[0])}
+
+    def expert_action(self) -> str | None:
+        """The next action of ALFWorld's handcoded expert, which the game provides on the training split only."""
+        plan = self._info.get("expert_plan") or []
+        return plan[0] if plan else None
+
+    def _scan(self) -> dict[str, list[str]]:
+        room = {}
+        places = [c[len("go to "):] for c in self._info["admissible_commands"] if c.startswith("go to ")]
+        for receptacle in places[:SCAN_BUDGET]:
+            observation, _, _ = self.step(f"go to {receptacle}")
+            if "closed" in observation.lower() and f"open {receptacle}" in self._info["admissible_commands"]:
+                observation, _, _ = self.step(f"open {receptacle}")
+            room[receptacle] = _contents(observation)
+        return room
+
     def plan(self, task: Task) -> Plan:
-        game = DATA / task.task_id
-        self.labeler.goal = task.goal
-        self.labeler.destination = task_parameters(game)["destination"] or None
-        return pddl_plan(game)
+        """Operators from the goal text; bindings as `bindings` says. The scan plays in the game, which `reset`
+        restarts before the task is solved."""
+        self.labeler.goal, self.labeler.destination = task.goal, None
+        operators = goal_operators(task.goal)
+        if self.bindings == "pddl":
+            expert = pddl_plan(DATA / task.task_id)
+            if tuple(p.operator for p in expert) == operators:
+                return expert
+            return tuple(PlanStep(op) for op in operators)
+        if self.bindings == "scan":
+            self._load(task.task_id)
+            return bind_plan(operators, task.goal, self._scan())
+        return tuple(PlanStep(op) for op in operators)
 
     def reset(self, task: Task) -> str:
         self.labeler.goal = task.goal
@@ -264,7 +355,7 @@ class AlfworldApplication:
 
     def step(self, action: str) -> tuple[str, bool, bool]:
         observations, _, dones, info = self._env.step([action])
-        self._info = {"admissible_commands": info["admissible_commands"][0], "won": bool(info.get("won", [False])[0])}
+        self._info = self._read(info)
         return observations[0], bool(dones[0]), self._info["won"]
 
     def admissible_actions(self) -> Sequence[str]:
@@ -275,3 +366,35 @@ class AlfworldApplication:
 
     def operator_of(self, action: str) -> str | None:
         return self.labeler.operator_of(action)
+
+
+def confirm_plans(task_ids: Sequence[str], goals: dict[str, str]) -> list[tuple[str, tuple[str, ...], tuple[str, ...]]]:
+    """Tasks whose goal-derived operators differ from those of the game's expert PDDL plan, as
+    (task id, from the goal, from the PDDL). Empty when the PDDL confirms the mapping for every task."""
+    differing = []
+    for task_id in task_ids:
+        derived = goal_operators(goals[task_id])
+        expert = tuple(p.operator for p in pddl_plan(DATA / task_id))
+        if derived != expert:
+            differing.append((task_id, derived, expert))
+    return differing
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = parser.add_subparsers(dest="command", required=True)
+    c = sub.add_parser("confirm-plans", help="compare the goal-derived plans with the games' expert PDDL plans")
+    c.add_argument("--tasks", required=True, help="task list (game files relative to ALFWORLD_DATA)")
+    args = parser.parse_args()
+    task_ids = [line.strip() for line in Path(args.tasks).read_text().splitlines() if line.strip()]
+    app = AlfworldApplication(bindings="none")
+    goals = {task_id: app.task(task_id).goal for task_id in task_ids}
+    differing = confirm_plans(task_ids, goals)
+    for task_id, derived, expert in differing:
+        print(f"{task_id}: goal gives {derived}, PDDL gives {expert}")
+    print(f"{len(task_ids) - len(differing)}/{len(task_ids)} goal-derived plans confirmed by the PDDL")
+    raise SystemExit(1 if differing else 0)
+
+
+if __name__ == "__main__":
+    main()

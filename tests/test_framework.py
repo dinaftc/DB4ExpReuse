@@ -169,3 +169,16 @@ def test_run_task_stores_then_reuses(embedder):
 
     item = first.stored
     assert to_json(from_json(to_json(item))) == to_json(item)
+
+
+def test_expert_consumer_follows_the_application_expert(embedder):
+    from expreuse.consumers import ExpertConsumer
+
+    class ExpertApp(ToyApp):
+        def expert_action(self):
+            return ["take key", "put key"][len(self.done)] if len(self.done) < 2 else None
+
+    app = ExpertApp()
+    episode = run_task(app, ExpertConsumer(app), Task("t", "toy", "store the key"), embedder,
+                       MemoryStore(), store_as="expert")
+    assert episode.success and [s.action for s in episode.stored.steps] == ["take key", "put key"]
