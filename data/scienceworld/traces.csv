@@ -1,9 +1,9 @@
 trace_id,task_id,producer,success
-06fc1c09,sci39,Gemma-26B,1
-62d48a64,sci51,Gemma-26B,1
-7b0f62f3,sci20,Gemma-26B,1
-3dc89250,sci41,Gemma-26B,0
-85171232,sci47,imitation,1
-a00cf715,sci114,imitation,1
-bc55908b,sci65,imitation,1
-80a839a1,sci86,imitation,0
+06fc1c09,lifespan-longest-lived-then-shortest-lived:3,Gemma-26B,1
+62d48a64,find-non-living-thing:0,Gemma-26B,1
+7b0f62f3,find-living-thing:3,Gemma-26B,1
+3dc89250,measure-melting-point-unknown-substance:2,Gemma-26B,0
+85171232,find-non-living-thing:3,imitation,1
+a00cf715,lifespan-longest-lived-then-shortest-lived:3,imitation,1
+bc55908b,test-conductivity:1,imitation,1
+80a839a1,measure-melting-point-known-substance:2,imitation,0

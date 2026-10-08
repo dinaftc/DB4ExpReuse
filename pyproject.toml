@@ -18,13 +18,14 @@ llm = ["openai>=1.30"]
 dev = ["pytest>=8"]
 alfworld = ["alfworld>=0.4.2"]
 scienceworld = ["scienceworld>=1.2.3"]
+policies = ["torch>=2.1", "sentence-transformers>=2.7", "pyyaml>=6"]
 all = ["expreuse[postgres,qdrant,embeddings,llm,dev]"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-expreuse = ["stores/*.sql", "envs/*.json"]
+expreuse = ["stores/*.sql", "envs/*.json", "policies/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

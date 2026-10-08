@@ -151,14 +151,19 @@ class ScienceWorldApplication:
         name, variation = task.task_id.rsplit(":", 1)
         self._env.load(name, int(variation), simplificationStr=SIMPLIFICATION)
         observation, info = self._env.reset()
-        self._info = {"task_desc": info.get("taskDesc") or "", "valid": info.get("valid") or [], "score": 0.0}
+        self._info = {"task_desc": info.get("taskDesc") or "", "valid": info.get("valid") or [], "score": 0.0,
+                      "look": info.get("look") or "", "inv": info.get("inv") or ""}
         return observation
 
     def step(self, action: str) -> tuple[str, bool, bool]:
         observation, _, done, info = self._env.step(action)
         score = float(info.get("score") or 0)
-        self._info.update(valid=info.get("valid") or [], score=score)
+        self._info.update(valid=info.get("valid") or [], score=score, look=info.get("look") or "", inv=info.get("inv") or "")
         return observation, bool(done), score >= 100
+
+    def state_fields(self) -> dict[str, str]:
+        """What the simulator reports about the current state: the room ('look') and the inventory ('inv')."""
+        return {"look": self._info.get("look", ""), "inv": self._info.get("inv", "")}
 
     def admissible_actions(self) -> Sequence[str]:
         return list(self._info.get("valid", []))

@@ -13,8 +13,8 @@ over it:
 
 > **Status.** The framework (data model, reuse queries, grounding, consumers, the three physical realizations,
 > the system benchmarks) and the two applications (ALFWorld and ScienceWorld: environment wrappers, operator
-> libraries, task plans, trace segmentation rules). `data/` holds a sample of each application's store. The trained
-> policies and the scripts that produce the task-success tables are not included.
+> libraries, task plans, trace segmentation rules), the two policy consumers with their training code, and in
+> `data/` a sample of each application's store. The scripts that produce the task-success tables are not included.
 
 ## Install
 
@@ -72,6 +72,8 @@ plan, reuse query, grounding, acting, segmentation, and storing the new trace.
 | ALFWorld: operators, plan from the goal, scan, segmentation rules | `src/expreuse/envs/alfworld.py` |
 | ScienceWorld: operators, plan per task type from gold traces, segmentation rules | `src/expreuse/envs/scienceworld.py`, `envs/scienceworld_plans.json` |
 | Sample of the stores (operators, tasks, plans, traces, steps, subtraces) | `data/alfworld/`, `data/scienceworld/` |
+| TextDAgger policy on ALFWorld and its training | `src/expreuse/policies/alfworld_dagger.py`, `alfworld_dagger_train.py`, `alfworld_dagger.yaml` |
+| Imitation policy on ScienceWorld and its training | `src/expreuse/policies/scienceworld_imitation.py` |
 
 ## Applications
 
@@ -110,6 +112,47 @@ print(episode.success, episode.experience.route)
 
 `data/README.md` describes the sample stores: for each application, the operator library with signatures
 (Table 2) and a few tasks with their plans, traces, steps and subtraces, as JSON Lines and CSV.
+
+## Policy consumers
+
+Both trained policies implement `BasePolicy` (`log_probs` over the admissible actions) and are shaped by
+`ShapedPolicy`. Install the `policies` extra.
+
+**ALFWorld, TextDAgger.** ALFWorld's own DAgger recipe (`alfworld_dagger_train.py` is ALFWorld 0.4.2's training
+script with four marked changes; `alfworld_dagger.yaml` its configuration), trained on the training games minus
+the ones the stores were collected on, with `valid_seen` for checkpoint selection, 50,000 episodes on a GPU.
+
+```bash
+python -m expreuse.policies.alfworld_dagger prepare --exclude store_games.txt --target data/alfworld_dagger_train
+DAGGER_TRAIN_DATA=data/alfworld_dagger_train/json_2.1.1/train DAGGER_MODELS=data/models/alfworld_dagger \
+  python -m expreuse.policies.alfworld_dagger_train src/expreuse/policies/alfworld_dagger.yaml
+python -m expreuse.policies.alfworld_dagger calibrate --checkpoint data/models/alfworld_dagger/dagger_admissible_id.pt
+```
+
+```python
+from expreuse.consumers import ShapedPolicy
+from expreuse.policies.alfworld_dagger import DaggerPolicy
+policy = ShapedPolicy(DaggerPolicy("data/models/alfworld_dagger/dagger_admissible_id.pt"), embedder, m=1, lam=1.0)
+```
+
+**ScienceWorld, imitation.** A scoring head over frozen all-MiniLM-L6-v2 embeddings of the state (task, last
+actions and observation, room, inventory) and of each valid action, trained by behaviour cloning on the gold paths
+of the training variations (store games left out), with harmless detours as in DART; the epoch is selected by
+playing the dev games and the score temperature is fitted on the dev states.
+
+```bash
+python -m expreuse.policies.scienceworld_imitation data --exclude store_games.txt --workers 24
+python -m expreuse.policies.scienceworld_imitation embed
+python -m expreuse.policies.scienceworld_imitation train --epochs 6
+python -m expreuse.policies.scienceworld_imitation select
+python -m expreuse.policies.scienceworld_imitation calibrate
+```
+
+```python
+from expreuse.policies.scienceworld_imitation import ImitationPolicy
+policy = ShapedPolicy(ImitationPolicy("data/models/scienceworld_imitation", app), embedder, m=1, lam=1.0,
+                      operator_of=app.operator_of)
+```
 
 ## Adding an application
 
