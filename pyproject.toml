@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "expreuse"
+version = "0.1.0"
+description = "A data abstraction for agent experience reuse in sequential decision making"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1"]
+qdrant = ["qdrant-client>=1.10"]
+embeddings = ["sentence-transformers>=2.7"]
+llm = ["openai>=1.30"]
+dev = ["pytest>=8"]
+all = ["expreuse[postgres,qdrant,embeddings,llm,dev]"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+expreuse = ["stores/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
