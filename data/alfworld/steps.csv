@@ -14,7 +14,7 @@ trace_id,step_index,subgoal_id,action,observation
 3e1ba21d,0,0,look,"You are in the middle of a room. Looking quickly around you, you see nothing."
 3e1ba21d,1,0,go to sidetable 1,"You arrive at sidetable 1. On the sidetable 1, you see a creditcard 1, a desklamp 1, a keychain 1, a pen 2, a pen 1, and"
 3e1ba21d,2,0,take keychain 1 from sidetable 1,You pick up the keychain 1 from the sidetable 1.
-3e1ba21d,3,1,use desklamp 1,You turn on the desklamp 1.
+3e1ba21d,3,0,use desklamp 1,You turn on the desklamp 1.
 03452d23,0,0,look,"You are in the middle of a room. Looking quickly around you, you see nothing."
 03452d23,1,0,go to toaster 1,"You arrive at toaster 1. On the toaster 1, you see nothing."
 03452d23,2,0,go to stoveburner 1,"You arrive at stoveburner 1. On the stoveburner 1, you see nothing."

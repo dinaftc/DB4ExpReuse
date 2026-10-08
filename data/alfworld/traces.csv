@@ -1,9 +1,9 @@
 trace_id,task_id,producer,success
-09f80e7b,alf-5288596b258c6af0,DAgger,1
-34667f45,alf-302031a9c7e31fe9,DAgger,1
-3e1ba21d,alf-95fe297af8fb17db,DAgger,1
-03452d23,alf-5b78fdafdd0f325d,DAgger,0
-2c54734b,alf-d96689633547c14f,Gemma-26B,1
-3ed2fbcf,alf-e55094bb5301111b,Gemma-26B,1
-57b5fcdd,alf-36d19ee6112f67c8,Gemma-26B,1
-011eb4b3,alf-9e241140d14cf640,Gemma-26B,0
+09f80e7b,json_2.1.1/train/pick_and_place_simple-Statue-None-CoffeeTable-228/trial_T20190906_185451_580211/game.tw-pddl,DAgger,1
+34667f45,json_2.1.1/train/pick_clean_then_place_in_recep-SoapBar-None-GarbageCan-408/trial_T20190908_045340_470949/game.tw-pddl,DAgger,1
+3e1ba21d,json_2.1.1/train/look_at_obj_in_light-KeyChain-None-DeskLamp-309/trial_T20190909_094219_644881/game.tw-pddl,DAgger,1
+03452d23,json_2.1.1/train/pick_two_obj_and_place-Cup-None-Microwave-26/trial_T20190907_231337_619124/game.tw-pddl,DAgger,0
+2c54734b,json_2.1.1/train/pick_and_place_simple-CreditCard-None-Desk-307/trial_T20190907_143724_810881/game.tw-pddl,Gemma-26B,1
+3ed2fbcf,json_2.1.1/train/look_at_obj_in_light-Bowl-None-DeskLamp-323/trial_T20190908_024019_183353/game.tw-pddl,Gemma-26B,1
+57b5fcdd,json_2.1.1/train/pick_heat_then_place_in_recep-Mug-None-CoffeeMachine-7/trial_T20190908_134328_888805/game.tw-pddl,Gemma-26B,1
+011eb4b3,json_2.1.1/train/pick_two_obj_and_place-Book-None-Drawer-307/trial_T20190909_111540_991626/game.tw-pddl,Gemma-26B,0

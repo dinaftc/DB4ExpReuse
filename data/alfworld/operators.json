@@ -26,7 +26,7 @@
    "object",
    "appliance"
   ],
-  "description": "heat the held object",
+  "description": "heat the object (ALFWorld: in the microwave; ScienceWorld: on an activated heat source)",
   "example": "(mug 2, microwave 1)"
  },
  {
@@ -36,7 +36,7 @@
    "object",
    "appliance"
   ],
-  "description": "cool the held object",
+  "description": "cool the object (ALFWorld: in the fridge; ScienceWorld: in a freezer or fridge)",
   "example": "(bread 1, fridge 1)"
  },
  {

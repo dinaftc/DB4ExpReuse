@@ -1,8 +1,9 @@
 # Sample of the stores
 
-A small subset of each application's store in the data model of Section 3.1, as produced by the paper's
-pipeline: a few tasks per application, their traces from an LLM producer (Gemma-26B) and from a trained policy
-(DAgger on ALFWorld, the imitation policy on ScienceWorld), successful and failed.
+A small subset of each application's store in the data model of Section 3.1: a few tasks per application, their
+traces from an LLM producer (Gemma-26B) and from a trained policy (DAgger on ALFWorld, the imitation policy on
+ScienceWorld), successful and failed, segmented by the applications' own rules. The task lists of the experiments
+are in `tasks/` (see `tasks/README.md`).
 
 | File | Content |
 |---|---|
@@ -13,7 +14,9 @@ pipeline: a few tasks per application, their traces from an LLM producer (Gemma-
 
 A subtrace is the steps of a trace that share a `subgoal_id`, the position of its operator in the task plan.
 `finished` is 1 when the environment carried out the operator; `fits` is 1 when the subtrace contains only the
-steps of its own operator. `plans.csv` gives each task's plan with the bindings its successful trace used.
+steps of its own operator. `plans.csv` gives each task's plan with its target bindings: on ALFWorld those read
+from the game's PDDL, on ScienceWorld those read from the task description (the room scan adds the rest at run
+time).
 
 ```python
 from expreuse.embedding import HashEmbedder

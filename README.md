@@ -11,10 +11,12 @@ over it:
 - **Subtraces** returns, for each operator of the target plan, the most similar finished subtraces.
 - **Cascade** picks between the two at query time, using the similarity of the best complete trace.
 
-> **Status.** The framework (data model, reuse queries, grounding, consumers, the three physical realizations,
-> the system benchmarks) and the two applications (ALFWorld and ScienceWorld: environment wrappers, operator
-> libraries, task plans, trace segmentation rules), the two policy consumers with their training code, and in
-> `data/` a sample of each application's store. The scripts that produce the task-success tables are not included.
+> **Contents.** The framework (data model, reuse queries, grounding, consumers, the three physical realizations,
+> the system benchmarks); the two applications (ALFWorld and ScienceWorld: environment wrappers, operator
+> libraries, task plans, trace segmentation rules); the two policy consumers with their training code; the
+> scripts of every experiment with their settings (`experiments/`, `src/expreuse/config.py`) and task lists
+> (`data/tasks/`); and in `data/` a sample of each application's store. The full stores, the trained policies and
+> the API keys are not included: `experiments/collect_stores.sh` rebuilds the stores by running the producers.
 
 ## Install
 
@@ -67,10 +69,15 @@ plan, reuse query, grounding, acting, segmentation, and storing the new trace.
 | JSONB realization | `src/expreuse/stores/jsonb.py`, `jsonb.sql` |
 | Qdrant realization | `src/expreuse/stores/qdrant.py` |
 | Bootstrap standard errors (§4.1) | `src/expreuse/evaluation.py` |
+| Partial subtrace coverage (withholding) | `src/expreuse/ablations.py` |
+| Settings: models, serving, seeds, θ, K, m, λ, budgets | `src/expreuse/config.py` |
+| Running a condition, summaries, θ sweep | `src/expreuse/experiments/` |
+| The experiments, one script each | `experiments/*.sh` |
+| Task lists (evaluation, store, calibration, cross-application) | `data/tasks/` |
 | Scaling, latency, concurrency, approximate search (§4.5) | `src/expreuse/bench/` |
 | Interface an application implements | `src/expreuse/envs/base.py` |
-| ALFWorld: operators, plan from the goal, scan, segmentation rules | `src/expreuse/envs/alfworld.py` |
-| ScienceWorld: operators, plan per task type from gold traces, segmentation rules | `src/expreuse/envs/scienceworld.py`, `envs/scienceworld_plans.json` |
+| ALFWorld: operators, plan and bindings from the game's PDDL, segmentation rules | `src/expreuse/envs/alfworld.py` |
+| ScienceWorld: operators (with heat and cool), plan per task type from gold traces, room scan, segmentation rules | `src/expreuse/envs/scienceworld.py`, `envs/scienceworld_plans.json` |
 | Sample of the stores (operators, tasks, plans, traces, steps, subtraces) | `data/alfworld/`, `data/scienceworld/` |
 | TextDAgger policy on ALFWorld and its training | `src/expreuse/policies/alfworld_dagger.py`, `alfworld_dagger_train.py`, `alfworld_dagger.yaml` |
 | Imitation policy on ScienceWorld and its training | `src/expreuse/policies/scienceworld_imitation.py` |
@@ -82,13 +89,22 @@ the paper (install the `alfworld` or `scienceworld` extra; ALFWorld's data goes 
 needs Java). Each one lists its tasks (`task_ids()`), reads a task's goal (`task(task_id)`), derives the task plan
 (`plan(task)`) and runs the environment loop for `run_task`.
 
-- **ALFWorld**: the plan's operators follow from the goal (`goal_operators`); a scripted scan of the room binds
-  them to the objects, destination and appliances it finds. Subtraces close at the milestone actions take, put,
-  heat, cool, clean and use.
-- **ScienceWorld**: one plan per task type, derived from the benchmark's gold traces of training tasks
-  (`envs/scienceworld_plans.json`); the type of a new task is recognised from its description. Subtraces close at
-  the manipulation commands (focus on, pick up, move, pour, mix, activate, deactivate, use, connect, read), a pick
-  up or move being complete when the simulator confirms it.
+- **ALFWorld**: the plan is read directly from the game's PDDL (`pddl_plan`): the expert plan in `traj_data.json`
+  gives the operators, and the PDDL problem in `game.tw-pddl` names the object, source, destination and appliance
+  of each one (the game numbers its objects deterministically from that problem, `entity_names`). These bindings
+  are what grounding substitutes into stored subtraces; no exploration of the room is needed. Subtraces close at
+  the milestone actions take, put, heat, cool, clean and use.
+- **ScienceWorld**: one plan per task type, derived from the benchmark's gold traces of training variations
+  (`python -m expreuse.envs.scienceworld build-plans`, table in `envs/scienceworld_plans.json`); the type of a new
+  task is recognised from its description, and a scripted scan of the rooms (`scan`, teleport to each room and read
+  it, not charged to the task) binds the plan to the substance, heat source, cold place, container and instrument
+  it finds. Subtraces close at the manipulation commands (focus on, pick up, move, pour, mix, activate, deactivate,
+  use, connect, read), a pick up or move being complete when the simulator confirms it; activating a heat source
+  realizes `heat` and moving an object into a freezer or fridge realizes `cool`, the operators shared with ALFWorld
+  besides take and put.
+
+ALFWorld's planner library is copied to a temporary directory at start-up; if the home directory is on a network
+file system, point `TMPDIR` to a local disk.
 
 ```python
 from expreuse import ReuseConfig, run_task
@@ -153,6 +169,53 @@ from expreuse.policies.scienceworld_imitation import ImitationPolicy
 policy = ShapedPolicy(ImitationPolicy("data/models/scienceworld_imitation", app), embedder, m=1, lam=1.0,
                       operator_of=app.operator_of)
 ```
+
+## Experiments
+
+Every condition is one call of `expreuse.experiments.run` (application, consumer, query, store, task list), which
+writes one JSON line per episode and resumes where it stopped; `expreuse.experiments.summarize` turns result files
+into task success with bootstrap standard errors (runs averaged per task, tasks resampled), route shares, steps,
+time per component and tokens, with paired differences, wins and losses against a baseline file. The scripts in
+`experiments/` run the conditions of each experiment:
+
+| Script | Experiment |
+|---|---|
+| `collect_stores.sh` | the producers solve the store task lists once (plan shown, no experience); their traces are the stores |
+| `same_application.sh` | each consumer with its own store: no reuse, Whole, Subtraces, Cascade; language models with the plan shown and in the no-plan setting (plan hidden, answers ungrounded) |
+| `cross_agent.sh` | a consumer reads another producer's store |
+| `cross_application.sh` | ALFWorld consumers read ScienceWorld traces and the reverse, on the tasks with shared operators, ungrounded; the same-application answers on those tasks are the reference |
+| `ablations.sh` | Cascade's threshold (`theta_sweep`, assembled from the Whole, Subtraces and no-reuse runs), retrieval depth K, partial subtrace coverage (`--withhold`, every subset on ALFWorld, one nested random ordering per task on ScienceWorld), grounding on and off |
+| `systems.sh` | the physical realizations: latency as the store grows, throughput under concurrent clients, approximate goal search |
+
+```bash
+export OPENROUTER_API_KEY=...        # Gemma; Ministral is served by Amazon Bedrock from the AWS environment
+PY=.venv/bin/python STORES=stores RESULTS=results bash experiments/collect_stores.sh
+bash experiments/same_application.sh
+python -m expreuse.experiments.summarize results/same_application/alfworld_gemma_plan_*.jsonl \
+    --baseline results/same_application/alfworld_gemma_plan_none.jsonl
+```
+
+The settings live in `src/expreuse/config.py`; a command-line option of `run` overrides a value for one condition.
+
+| Setting | Value |
+|---|---|
+| Goal embeddings | `all-mpnet-base-v2`, precomputed per goal |
+| Query | K = 1 answer; policies: m = 1 voting step, λ = 1; grounding on within an application |
+| Cascade threshold θ | 0.6 on ALFWorld (selected on `valid_seen`), 0.8 on ScienceWorld (selected on the dev variations) |
+| Language models | Gemma 4 26B-A4B-IT: `google/gemma-4-26b-a4b-it` through OpenRouter, providers Cloudflare then DeepInfra (ALFWorld) or Cloudflare (ScienceWorld); Ministral 8B: `mistralai/ministral-8b-2512` through Amazon Bedrock (`mistral.ministral-3-8b-instruct`) |
+| Serving | temperature 0, reasoning mode off, 4000 output tokens on ALFWorld and 1200 on ScienceWorld, request timeout 300 s / 600 s with 4 / 6 retries, static action interface (the action forms once, no per-step list of valid actions), an invalid action costs a step |
+| Repetitions | 3 runs of every language-model condition; the trained policies are deterministic and run once |
+| Seeds | ALFWorld environment 42; bootstrap 0; policy training 0; the coverage ordering of a task is seeded by its id |
+| Budgets | 40 steps on ALFWorld; per task type on ScienceWorld (`STEP_BUDGET`); scans are not charged |
+| Standard errors | bootstrap over tasks, 10,000 resamples |
+| Task lists | `data/tasks/README.md` |
+
+**Stores.** A producer's store is the set of traces it left on its store task list (256 ALFWorld training games,
+149 ScienceWorld training variations), segmented into subtraces; `collect_stores.sh` writes one JSON Lines file
+per producer and application. The scaling store of the system benchmarks (about 3.6K ALFWorld traces, grown
+synthetically to a million subtraces) was produced the same way by two further agents, a DeepSeek model and
+Ministral 3B, on ALFWorld's public training games (the `train` split of the `json_2.1.1` data distributed with
+[ALFWorld](https://github.com/alfworld/alfworld)); `systems.sh` grows any producer's store in its place.
 
 ## Adding an application
 

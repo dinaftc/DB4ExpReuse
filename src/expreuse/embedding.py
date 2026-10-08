@@ -26,7 +26,7 @@ def cosine(a: np.ndarray, b: np.ndarray) -> float:
 
 
 class SentenceTransformerEmbedder:
-    """all-mpnet-base-v2 by default, as in the paper."""
+    """all-mpnet-base-v2 by default."""
 
     def __init__(self, model: str = "sentence-transformers/all-mpnet-base-v2", device=None):
         from sentence_transformers import SentenceTransformer

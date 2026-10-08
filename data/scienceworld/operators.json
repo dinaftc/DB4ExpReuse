@@ -93,5 +93,25 @@
   ],
   "description": "read what the object shows",
   "example": "(instructions)"
+ },
+ {
+  "operator": "heat",
+  "form": "activate <heat source> (with <obj> on it)",
+  "signature": [
+   "object",
+   "appliance"
+  ],
+  "description": "heat the object (ALFWorld: in the microwave; ScienceWorld: on an activated heat source)",
+  "example": "(water, stove)"
+ },
+ {
+  "operator": "cool",
+  "form": "move <obj> to <cold place>",
+  "signature": [
+   "object",
+   "appliance"
+  ],
+  "description": "cool the object (ALFWorld: in the fridge; ScienceWorld: in a freezer or fridge)",
+  "example": "(water, freezer)"
  }
 ]

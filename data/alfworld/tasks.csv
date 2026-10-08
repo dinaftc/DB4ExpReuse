@@ -1,9 +1,9 @@
 task_id,application,goal
-alf-d96689633547c14f,alfworld,put some creditcard on desk.
-alf-e55094bb5301111b,alfworld,look at bowl under the desklamp.
-alf-36d19ee6112f67c8,alfworld,heat some mug and put it in coffeemachine.
-alf-9e241140d14cf640,alfworld,put two book in drawer.
-alf-95fe297af8fb17db,alfworld,look at keychain under the desklamp.
-alf-5288596b258c6af0,alfworld,put a statue in coffeetable.
-alf-302031a9c7e31fe9,alfworld,clean some soapbar and put it in garbagecan.
-alf-5b78fdafdd0f325d,alfworld,find two cup and put them in microwave.
+json_2.1.1/train/pick_and_place_simple-CreditCard-None-Desk-307/trial_T20190907_143724_810881/game.tw-pddl,alfworld,put some creditcard on desk.
+json_2.1.1/train/look_at_obj_in_light-Bowl-None-DeskLamp-323/trial_T20190908_024019_183353/game.tw-pddl,alfworld,look at bowl under the desklamp.
+json_2.1.1/train/pick_heat_then_place_in_recep-Mug-None-CoffeeMachine-7/trial_T20190908_134328_888805/game.tw-pddl,alfworld,heat some mug and put it in coffeemachine.
+json_2.1.1/train/pick_two_obj_and_place-Book-None-Drawer-307/trial_T20190909_111540_991626/game.tw-pddl,alfworld,put two book in drawer.
+json_2.1.1/train/look_at_obj_in_light-KeyChain-None-DeskLamp-309/trial_T20190909_094219_644881/game.tw-pddl,alfworld,look at keychain under the desklamp.
+json_2.1.1/train/pick_and_place_simple-Statue-None-CoffeeTable-228/trial_T20190906_185451_580211/game.tw-pddl,alfworld,put a statue in coffeetable.
+json_2.1.1/train/pick_clean_then_place_in_recep-SoapBar-None-GarbageCan-408/trial_T20190908_045340_470949/game.tw-pddl,alfworld,clean some soapbar and put it in garbagecan.
+json_2.1.1/train/pick_two_obj_and_place-Cup-None-Microwave-26/trial_T20190907_231337_619124/game.tw-pddl,alfworld,find two cup and put them in microwave.

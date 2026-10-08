@@ -4,6 +4,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field, replace
+from typing import Callable
 
 from .consumers.base import Consumer
 from .embedding import Embedder
@@ -49,10 +50,12 @@ def retrieve(store: ExperienceStore, task: Task, plan: Plan, config: ReuseConfig
 
 def run_task(app: Application, consumer: Consumer, task: Task, embedder: Embedder,
              store: ExperienceStore | None = None,
-             config: ReuseConfig = ReuseConfig(), store_as: str | None = None
+             config: ReuseConfig = ReuseConfig(), store_as: str | None = None,
+             shape: Callable[[Experience], Experience] | None = None
              ) -> Episode:
     """Solve one task. With `store_as`, the resulting trace is segmented and
-    inserted as experience of that producer."""
+    inserted as experience of that producer. `shape` edits the query's answer
+    before the consumer sees it (the coverage ablation withholds subtraces)."""
     seconds = {"retrieval": 0.0, "environment": 0.0, "consumer": 0.0}
     if task.embedding is None:
         task = replace(task, embedding=embedder.encode([task.goal])[0])
@@ -63,6 +66,8 @@ def run_task(app: Application, consumer: Consumer, task: Task, embedder: Embedde
         start = time.perf_counter()
         experience, cross = retrieve(store, task, plan, config)
         seconds["retrieval"] = time.perf_counter() - start
+        if shape is not None:
+            experience = shape(experience)
 
     consumer.begin(task, plan, experience, cross_application=cross)
     start = time.perf_counter()

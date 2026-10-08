@@ -1,32 +1,32 @@
 task_id,position,operator,binding
-lifespan-longest-lived-then-shortest-lived:3,0,focus on,"{""object"": ""egg parrot""}"
-lifespan-longest-lived-then-shortest-lived:3,1,focus on,"{""object"": ""baby baby mouse""}"
-find-non-living-thing:0,0,focus on,"{""object"": ""battery""}"
-find-non-living-thing:0,1,put,"{""object"": ""battery"", ""destination"": ""red box""}"
-find-living-thing:3,0,focus on,"{""object"": ""apple tree""}"
-find-living-thing:3,1,take,"{""object"": ""apple tree""}"
-find-living-thing:3,2,put,"{""object"": ""apple tree"", ""destination"": ""orange box""}"
+lifespan-longest-lived-then-shortest-lived:3,0,focus on,"{""object"": ""animal with the longest life span""}"
+lifespan-longest-lived-then-shortest-lived:3,1,focus on,"{""object"": ""animal with the longest life span""}"
+find-non-living-thing:0,0,focus on,{}
+find-non-living-thing:0,1,put,"{""destination"": ""red box""}"
+find-living-thing:3,0,focus on,{}
+find-living-thing:3,1,take,{}
+find-living-thing:3,2,put,"{""destination"": ""orange box""}"
 measure-melting-point-unknown-substance:2,0,take,{}
-measure-melting-point-unknown-substance:2,1,focus on,{}
+measure-melting-point-unknown-substance:2,1,focus on,"{""object"": ""thermometer""}"
 measure-melting-point-unknown-substance:2,2,take,{}
-measure-melting-point-unknown-substance:2,3,focus on,{}
-measure-melting-point-unknown-substance:2,4,put,{}
-measure-melting-point-unknown-substance:2,5,measure,{}
-measure-melting-point-unknown-substance:2,6,focus on,{}
-find-non-living-thing:3,0,focus on,"{""object"": ""lighter""}"
-find-non-living-thing:3,1,put,"{""object"": ""lighter"", ""destination"": ""orange box""}"
-test-conductivity:1,0,take,"{""object"": ""aluminum foil""}"
+measure-melting-point-unknown-substance:2,3,focus on,"{""object"": ""thermometer""}"
+measure-melting-point-unknown-substance:2,4,cool,"{""object"": ""liquid unknown substance J""}"
+measure-melting-point-unknown-substance:2,5,measure,"{""object"": ""liquid unknown substance J""}"
+measure-melting-point-unknown-substance:2,6,focus on,"{""object"": ""thermometer""}"
+find-non-living-thing:3,0,focus on,{}
+find-non-living-thing:3,1,put,"{""destination"": ""orange box""}"
+test-conductivity:1,0,take,{}
 test-conductivity:1,1,focus on,"{""object"": ""aluminum foil""}"
 test-conductivity:1,2,connect,{}
 test-conductivity:1,3,connect,{}
 test-conductivity:1,4,connect,{}
 test-conductivity:1,5,put,{}
-measure-melting-point-known-substance:2,0,take,"{""object"": ""thermometer""}"
+measure-melting-point-known-substance:2,0,take,{}
 measure-melting-point-known-substance:2,1,focus on,"{""object"": ""thermometer""}"
-measure-melting-point-known-substance:2,2,focus on,"{""object"": ""yellow box""}"
+measure-melting-point-known-substance:2,2,focus on,"{""object"": ""thermometer""}"
 measure-melting-point-known-substance:2,3,put,{}
-measure-melting-point-known-substance:2,4,activate,{}
-measure-melting-point-known-substance:2,5,measure,{}
-measure-melting-point-known-substance:2,6,measure,{}
-measure-melting-point-known-substance:2,7,measure,{}
-measure-melting-point-known-substance:2,8,focus on,{}
+measure-melting-point-known-substance:2,4,heat,"{""object"": ""chocolate""}"
+measure-melting-point-known-substance:2,5,measure,"{""object"": ""chocolate""}"
+measure-melting-point-known-substance:2,6,measure,"{""object"": ""chocolate""}"
+measure-melting-point-known-substance:2,7,measure,"{""object"": ""chocolate""}"
+measure-melting-point-known-substance:2,8,focus on,"{""object"": ""thermometer""}"

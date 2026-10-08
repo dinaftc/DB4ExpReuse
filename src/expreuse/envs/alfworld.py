@@ -1,11 +1,15 @@
 """ALFWorld (Shridhar et al., 2021): text household tasks of six types, one room each.
 
 Operators are the milestone actions of the game (take, put, heat, cool, clean, use); navigation and opening are
-setup steps of the operator they precede. The task plan follows from the goal text, which names the task type and
-the destination; its bindings come from a scripted scan of the room (every receptacle visited and opened).
+setup steps of the operator they precede. The task plan is read directly from the game's PDDL: the expert plan in
+`traj_data.json` gives the operators, and the PDDL problem in `game.tw-pddl` names the objects they act on (the
+game numbers its objects deterministically from that problem), so the plan's bindings are exact and no exploration
+of the room is needed. Grounding substitutes these entities for those of the stored subtraces.
 """
 from __future__ import annotations
 
+import collections
+import json
 import os
 import re
 from pathlib import Path
@@ -16,19 +20,17 @@ from ..operators import ALFWORLD as OPERATORS
 
 DATA = Path(os.environ.get("ALFWORLD_DATA", os.path.expanduser("~/.cache/alfworld")))
 MAX_STEPS = 40
-SCAN_BUDGET = 30  # receptacles visited by the scan
+PLANNER_OPERATORS = {"PickupObject": "take", "PutObject": "put", "HeatObject": "heat", "CoolObject": "cool",
+                     "CleanObject": "clean", "ToggleObject": "use"}
 
 _TAKE = re.compile(r"^\s*(?:take|pick up)\s+(.+?)(?:\s+from\s+(.+?))?\s*$", re.I)
 _PUT = re.compile(r"^\s*(?:put|move)\s+(.+?)\s+(?:in/on|into|in|on|to)\s+(.+?)\s*$", re.I)
 _TRANSFORM = re.compile(r"^\s*(cool|heat|clean)\s+(.+?)\s+with\s+(.+?)\s*$", re.I)
 _USE = re.compile(r"^\s*use\s+(.+?)\s*$", re.I)
 _GOAL = re.compile(r"your task is to:\s*(.+)", re.I)
-_SEE = re.compile(r"you see (.+?)\.?\s*$", re.I)
-_ARTICLE = re.compile(r"^(?:a|an|some|the)\s+", re.I)
 APPLIANCES = ("microwave", "fridge", "sinkbasin", "sink")
-APPLIANCE_OF = {"heat": "microwave", "cool": "fridge", "clean": "sinkbasin", "use": "desklamp"}
 
-# The prompt of the paper's LLM runs (the static action interface: no per-step candidates, no worked examples).
+# The static action interface shown to an LLM consumer: the action forms, no per-step list of valid actions.
 ACTION_TEMPLATES = (
     "go to [receptacle]",
     "open [receptacle]",
@@ -69,20 +71,9 @@ def goal_text(observation: str) -> str:
     return match.group(1).strip() if match else observation.strip()
 
 
-def goal_operators(goal: str) -> tuple[str, ...]:
-    """The task plan's operators, from the goal: the task type and the destination it names."""
-    g = goal.lower()
-    if any(k in g for k in ("desklamp", "lamp", "look at", "examine")):
-        return ("take", "use")
-    middle = [op for op, keys in (("clean", ("clean",)), ("heat", ("hot", "heat")), ("cool", ("cool", "cold")))
-              if any(k in g for k in keys)]
-    if "two" in g:
-        return ("take", "put", "take", "put")
-    return ("take", *middle, "put")
-
-
 def goal_entities(goal: str) -> tuple[str | None, str | None]:
-    """(object type, destination type) named by the goal, e.g. ('mug', 'cabinet')."""
+    """(object type, destination type) named by the goal text, e.g. ('mug', 'cabinet'); used for stored traces
+    whose game files are not at hand."""
     g = goal.lower().rstrip(".")
     destination = re.search(r"\b(?:in|on|into)\s+(?:the\s+)?(\w+)", g)
     if any(k in g for k in ("desklamp", "lamp", "look at", "examine")):
@@ -92,11 +83,95 @@ def goal_entities(goal: str) -> tuple[str | None, str | None]:
     return (obj.group(1) if obj else None), (destination.group(1) if destination else None)
 
 
-class AlfworldLabeler:
-    """Which operator an action realizes, when it completed its subgoal, and the entities it bound."""
+# ---------------------------------------------------------------- the plan, from the game's PDDL
 
-    def __init__(self, goal: str | None = None):
-        self.goal = goal  # a put into an appliance is a milestone only when the goal asks for that destination
+def mangle(object_id: str) -> str:
+    """A simulator object id ('Apple|-00.59|+00.83|-00.40') as the object's name in the game's PDDL."""
+    return (object_id.replace("|", "_bar_").replace("-", "_minus_").replace("+", "_plus_")
+            .replace(".", "_dot_").replace(",", "_comma_").lower())
+
+
+def entity_names(problem: str) -> dict[str, str]:
+    """PDDL object name -> the numbered name the game shows ('apple 1'). The game sorts the instances of a type by
+    PDDL name and numbers them from the highest number down; a sink's basin is its own type."""
+    objects = problem.split("(:objects", 1)[1].split("(:init", 1)[0]
+    ids = sorted(token.lower() for token in re.findall(r"\S+", objects) if "_bar_" in token)
+
+    def base(name: str) -> str:
+        head = name.split("_bar_", 1)[0]
+        return head + "basin" if "basin" in name else head
+
+    stacks = {b: list(range(1, c + 1)) for b, c in collections.Counter(map(base, ids)).items()}
+    return {name: f"{base(name)} {stacks[base(name)].pop()}" for name in ids}
+
+
+def _facts(problem: str, predicate: str) -> list[tuple[str, str]]:
+    init = problem.split("(:init", 1)[1]
+    return [(m.group(1).lower(), m.group(2).lower())
+            for m in re.finditer(r"\(" + predicate + r"\s+([^\s()]+)\s+([^\s()]+)\)", init)]
+
+
+def task_parameters(game: Path) -> dict[str, str]:
+    """The task's PDDL parameters as lower-cased types: object, destination (parent), toggled appliance."""
+    params = json.loads((game.parent / "traj_data.json").read_text())["pddl_params"]
+    return {"object": params.get("object_target", "").lower(), "destination": params.get("parent_target", "").lower(),
+            "appliance": params.get("toggle_target", "").lower()}
+
+
+def pddl_plan(game: Path) -> Plan:
+    """The task plan of a game: the manipulation actions of the expert plan as operators, bound to the game's names
+    of the objects, receptacles and appliances they use. The receptacle an object is taken from is the one the
+    initial state places it in or at; it is left unbound when the state does not determine it."""
+    problem = json.loads(game.read_text())["pddl_problem"]
+    expert = json.loads((game.parent / "traj_data.json").read_text())["plan"]["high_pddl"]
+    names = entity_names(problem)
+    inside = dict(_facts(problem, "inReceptacle"))
+    at, receptacles_at = collections.defaultdict(list), collections.defaultdict(list)
+    for obj, location in _facts(problem, "objectAtLocation"):
+        at[obj].append(location)
+    for receptacle, location in _facts(problem, "receptacleAtLocation"):
+        receptacles_at[location].append(receptacle)
+
+    def name(object_id: str | None) -> str | None:
+        return names.get(mangle(object_id)) if object_id else None
+
+    def source(action: dict) -> str | None:
+        obj = mangle(action["objectId"])
+        if obj in inside:
+            return names.get(inside[obj])
+        kind = (action.get("coordinateReceptacleObjectId") or [""])[0].lower()
+        candidates = {r for location in at.get(obj, []) for r in receptacles_at.get(location, [])
+                      if not kind or r.split("_bar_", 1)[0] == kind or (kind == "sinkbasin" and "basin" in r)}
+        return names.get(candidates.pop()) if len(candidates) == 1 else None
+
+    plan, held = [], None
+    for step in expert:
+        action = step["planner_action"]
+        operator = PLANNER_OPERATORS.get(action["action"])
+        if operator is None:
+            continue
+        if operator == "take":
+            held = name(action["objectId"])
+            binding = {"object": held, "source": source(action)}
+        elif operator == "put":
+            binding = {"object": name(action["objectId"]), "destination": name(action.get("receptacleObjectId"))}
+        elif operator == "use":
+            binding = {"appliance": name(action["objectId"])}
+        else:
+            binding = {"object": name(action.get("cleanObjectId")) or held, "appliance": name(action["objectId"])}
+        plan.append(PlanStep(operator, {role: entity for role, entity in binding.items() if entity}))
+    return tuple(plan)
+
+
+# ---------------------------------------------------------------- segmentation rules
+
+class AlfworldLabeler:
+    """Which operator an action realizes, when it completed its subgoal, and the entities it bound. A put into an
+    appliance is a milestone only when the appliance is the task's destination (`destination`, the type from the
+    task's PDDL, or else the one the goal text names)."""
+
+    def __init__(self, goal: str | None = None, destination: str | None = None):
+        self.goal, self.destination = goal, destination
 
     def operator_of(self, action: str) -> str | None:
         match = _TAKE.match(action)
@@ -105,7 +180,7 @@ class AlfworldLabeler:
         match = _PUT.match(action)
         if match:
             destination = _type(match.group(2))
-            wanted = goal_entities(self.goal)[1] if self.goal else None
+            wanted = self.destination or (goal_entities(self.goal)[1] if self.goal else None)
             return None if _is_appliance(destination) and destination != wanted else "put"
         match = _TRANSFORM.match(action)
         if match:
@@ -132,38 +207,7 @@ class AlfworldLabeler:
         return {}
 
 
-def _contents(observation: str) -> list[str]:
-    match = _SEE.search(observation.strip())
-    if not match or "nothing" in match.group(1).lower():
-        return []
-    return [o for o in (_ARTICLE.sub("", p).strip() for p in re.split(r",\s*|\s+and\s+", match.group(1))) if o]
-
-
-def bind_plan(operators: Sequence[str], goal: str, room: dict[str, list[str]] | None) -> Plan:
-    """Target bindings from the scanned room: the goal's object where the scan saw it, the destination of the
-    goal's type, and the appliance each transform needs. Unknown entities leave the role unbound."""
-    object_type, destination_type = goal_entities(goal)
-    room = room or {}
-    objects = [(obj, place) for place, contents in room.items() for obj in contents
-               if object_type and _type(obj) == object_type]
-    receptacles = {_type(place): place for place in room}
-    plan, used = [], 0
-    for operator in operators:
-        binding: dict[str, str] = {}
-        if operator in ("take", "put", "heat", "cool", "clean") and objects:
-            obj, place = objects[min(used, len(objects) - 1)]
-            binding["object"] = obj
-            if operator == "take":
-                binding["source"] = place
-        if operator == "put":
-            used += 1
-            if destination_type and destination_type in receptacles:
-                binding["destination"] = receptacles[destination_type]
-        if operator in APPLIANCE_OF and APPLIANCE_OF[operator] in receptacles:
-            binding["appliance"] = receptacles[APPLIANCE_OF[operator]]
-        plan.append(PlanStep(operator, binding))
-    return tuple(plan)
-
+# ---------------------------------------------------------------- the environment
 
 class AlfworldApplication:
     """The ALFWorld text environment. Task ids are the game files relative to `ALFWORLD_DATA`."""
@@ -172,10 +216,10 @@ class AlfworldApplication:
     operators = OPERATORS
     system_prompt = SYSTEM_PROMPT
 
-    def __init__(self, split: str = "eval_out_of_distribution", scan: bool = True, seed: int = 42):
+    def __init__(self, split: str = "eval_out_of_distribution", seed: int = 42):
         from alfworld.agents.environment import get_environment
 
-        self.split, self.scan, self.seed = split, scan, seed
+        self.split, self.seed = split, seed
         self.labeler = AlfworldLabeler()
         self._config = {
             "dataset": {"data_path": str(DATA / "json_2.1.1/train"), "eval_id_data_path": str(DATA / "json_2.1.1/valid_seen"),
@@ -189,7 +233,7 @@ class AlfworldApplication:
         }
         self._tw = get_environment("AlfredTWEnv")(self._config, train_eval=split)
         self.game_files = list(self._tw.game_files)
-        self._env, self._loaded, self._info, self._room = None, None, {}, None
+        self._env, self._loaded, self._info = None, None, {}
 
     def task_ids(self) -> list[str]:
         return [str(Path(f).resolve().relative_to(DATA.resolve())) for f in self.game_files]
@@ -208,22 +252,11 @@ class AlfworldApplication:
         self._info = {"admissible_commands": info["admissible_commands"][0], "won": bool(info.get("won", [False])[0])}
         return observations[0]
 
-    def _scan(self) -> dict[str, list[str]]:
-        room = {}
-        for receptacle in [c[len("go to "):] for c in self._info["admissible_commands"] if c.startswith("go to ")][:SCAN_BUDGET]:
-            observation, _, _ = self.step(f"go to {receptacle}")
-            if "closed" in observation.lower() and f"open {receptacle}" in self._info["admissible_commands"]:
-                observation, _, _ = self.step(f"open {receptacle}")
-            room[receptacle] = _contents(observation)
-        return room
-
     def plan(self, task: Task) -> Plan:
+        game = DATA / task.task_id
         self.labeler.goal = task.goal
-        operators = goal_operators(task.goal)
-        if self.scan:
-            self._load(task.task_id)
-            self._room = self._scan()
-        return bind_plan(operators, task.goal, self._room if self.scan else None)
+        self.labeler.destination = task_parameters(game)["destination"] or None
+        return pddl_plan(game)
 
     def reset(self, task: Task) -> str:
         self.labeler.goal = task.goal

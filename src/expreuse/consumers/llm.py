@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import re
-
 from typing import Protocol, Sequence
 
 from ..model import Experience, Plan, Task
@@ -18,22 +17,71 @@ class ChatModel(Protocol):
     def complete(self, messages: list[dict[str, str]]) -> str: ...
 
 
-class OpenAIChatModel:
-    """Any OpenAI-compatible chat endpoint (vLLM, Ollama, hosted APIs)."""
+def _usage_counter() -> dict[str, int]:
+    return {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0}
 
-    def __init__(self, model: str, base_url: str | None = None,
-                 api_key: str | None = None, temperature: float = 0.0,
-                 max_tokens: int = 64):
+
+class OpenAIChatModel:
+    """Any OpenAI-compatible chat endpoint (vLLM, Ollama, hosted APIs). `extra` goes into the request body
+    (for OpenRouter: the provider order, the reasoning switch, see `openrouter_options`). `usage` accumulates
+    the tokens of all calls."""
+
+    def __init__(self, model: str, base_url: str | None = None, api_key: str | None = None,
+                 temperature: float = 0.0, max_tokens: int = 64, timeout: float | None = None,
+                 retries: int = 0, extra: dict | None = None):
         from openai import OpenAI
 
-        self.client = OpenAI(base_url=base_url, api_key=api_key)
+        self.client = OpenAI(base_url=base_url, api_key=api_key, timeout=timeout, max_retries=retries)
         self.model, self.temperature, self.max_tokens = model, temperature, max_tokens
+        self.extra = extra or {}
+        self.usage = _usage_counter()
 
     def complete(self, messages: list[dict[str, str]]) -> str:
         response = self.client.chat.completions.create(
             model=self.model, messages=messages, temperature=self.temperature,
-            max_tokens=self.max_tokens)
+            max_tokens=self.max_tokens, **({"extra_body": self.extra} if self.extra else {}))
+        usage = getattr(response, "usage", None)
+        self.usage["calls"] += 1
+        self.usage["prompt_tokens"] += getattr(usage, "prompt_tokens", 0) or 0
+        self.usage["completion_tokens"] += getattr(usage, "completion_tokens", 0) or 0
         return response.choices[0].message.content or ""
+
+
+def openrouter_options(providers: Sequence[str] = (), reasoning: bool = True) -> dict:
+    """OpenRouter's request options: serve the model from the listed providers in that order, and switch off
+    its reasoning mode when `reasoning` is false."""
+    options: dict = {}
+    if providers:
+        options["provider"] = {"order": list(providers), "allow_fallbacks": False}
+    if not reasoning:
+        options["reasoning"] = {"enabled": False}
+    return options
+
+
+class BedrockChatModel:
+    """Amazon Bedrock's Converse API (boto3); region and credentials come from the AWS environment."""
+
+    def __init__(self, model_id: str, temperature: float = 0.0, max_tokens: int = 64,
+                 timeout: float | None = None, retries: int = 0, region: str | None = None):
+        import boto3
+        from botocore.config import Config
+
+        config = Config(read_timeout=timeout, retries={"max_attempts": retries + 1, "mode": "standard"})
+        self.client = boto3.client("bedrock-runtime", config=config, region_name=region)
+        self.model_id, self.temperature, self.max_tokens = model_id, temperature, max_tokens
+        self.usage = _usage_counter()
+
+    def complete(self, messages: list[dict[str, str]]) -> str:
+        system = [{"text": m["content"]} for m in messages if m["role"] == "system"]
+        turns = [{"role": m["role"], "content": [{"text": m["content"]}]} for m in messages if m["role"] != "system"]
+        response = self.client.converse(
+            modelId=self.model_id, messages=turns, system=system,
+            inferenceConfig={"temperature": self.temperature, "maxTokens": self.max_tokens})
+        usage = response.get("usage", {})
+        self.usage["calls"] += 1
+        self.usage["prompt_tokens"] += usage.get("inputTokens", 0)
+        self.usage["completion_tokens"] += usage.get("outputTokens", 0)
+        return "".join(part.get("text", "") for part in response["output"]["message"]["content"])
 
 
 def _render_steps(steps) -> str:

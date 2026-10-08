@@ -131,7 +131,7 @@ class DaggerPolicy:
 def calibrate(checkpoint: Path, app, tasks: Sequence[str], config: Path = CONFIG) -> float:
     """Fit the temperature that minimises the negative log-likelihood of the policy's own choices as the game
     expert would make them: here, of the action the policy takes, over the admissible list, on the given games
-    (valid_seen in the paper). Writes calibration.json beside the checkpoint and returns the temperature."""
+    (the valid_seen games). Writes calibration.json beside the checkpoint and returns the temperature."""
     policy = DaggerPolicy(checkpoint, config, temperature=1.0)
     logits = []
     for task_id in tasks:
@@ -178,7 +178,7 @@ def main():
     else:
         from ..envs.alfworld import AlfworldApplication
 
-        app = AlfworldApplication(split="eval_in_distribution", scan=False)
+        app = AlfworldApplication(split="eval_in_distribution")
         temperature = calibrate(Path(args.checkpoint), app, app.task_ids()[: args.games])
         print(f"temperature {temperature:.2f}")
 

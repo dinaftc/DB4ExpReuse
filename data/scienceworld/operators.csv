@@ -9,3 +9,5 @@ deactivate,deactivate <device>,"[""device""]",turn the device off,(stove)
 measure,use <instrument> on <obj>,"[""object"", ""instrument""]",use an instrument such as the thermometer on the object,"(water, thermometer)"
 connect,connect <component> to <component>,"[""component_1"", ""component_2""]",connect two electrical components,"(wire, battery)"
 read,read <obj>,"[""object""]",read what the object shows,(instructions)
+heat,activate <heat source> (with <obj> on it),"[""object"", ""appliance""]",heat the object (ALFWorld: in the microwave; ScienceWorld: on an activated heat source),"(water, stove)"
+cool,move <obj> to <cold place>,"[""object"", ""appliance""]",cool the object (ALFWorld: in the fridge; ScienceWorld: in a freezer or fridge),"(water, freezer)"
