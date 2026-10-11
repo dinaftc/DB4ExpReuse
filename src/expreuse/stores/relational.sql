@@ -1,6 +1,4 @@
--- Normalized relational realization.
--- Task is split into task and goal so that each distinct goal is embedded and
--- compared once, however many tasks and traces share it.
+-- Task is split into task and goal so each distinct goal is embedded and compared once.
 CREATE TABLE IF NOT EXISTS goal (
     goal_id     bigserial PRIMARY KEY,
     application text NOT NULL,
@@ -8,8 +6,7 @@ CREATE TABLE IF NOT EXISTS goal (
     embedding   vector({dim}) NOT NULL,
     UNIQUE (application, goal)
 );
--- Keep embeddings inline: exact search scans every goal, and fetching each
--- vector from TOAST would dominate the scan.
+-- inline storage: exact search scans every goal, and TOAST fetches would dominate it
 ALTER TABLE goal ALTER COLUMN embedding SET STORAGE PLAIN;
 CREATE TABLE IF NOT EXISTS task (
     task_id     text PRIMARY KEY,

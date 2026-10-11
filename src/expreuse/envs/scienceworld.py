@@ -1,14 +1,6 @@
 """ScienceWorld (Wang et al., 2022): text science experiments in a house of rooms, 30 task types.
 
-Operators are the simulator's manipulation commands (focus on, pick up, move, pour, mix, activate, deactivate, use,
-connect, read); navigation, looking and waiting belong to the operator they precede. Activating a heat source
-(stove, oven, blast furnace, hot plate, lighter) realizes `heat`, and moving an object into a freezer or fridge
-realizes `cool`, the two operators ScienceWorld shares with ALFWorld besides take and put. A plan cannot in general
-be read off the goal, so each task type has one plan, derived from the benchmark's gold traces of training tasks
-(`scienceworld_plans.json`, built by `build_plans`); the type of a new task is recognised from its description and
-its bindings come from a scripted scan of the rooms.
-
-    python -m expreuse.envs.scienceworld build-plans --variations 20 --workers 8   -> scienceworld_plans.json
+    python -m expreuse.envs.scienceworld build-plans --variations 20 --workers 8
 """
 from __future__ import annotations
 
@@ -31,7 +23,7 @@ DEFAULT_BUDGET = 50
 SIMPLIFICATION = "easy"
 HEAT_SOURCES = ("stove", "oven", "blast furnace", "hot plate", "lighter")
 COLD_PLACES = ("freezer", "fridge", "refrigerator")
-SCAN_BUDGET = 25  # rooms visited by the scan
+SCAN_BUDGET = 25
 
 _VERBS = (
     (re.compile(r"^focus on\b", re.I), "focus on"),
@@ -72,7 +64,6 @@ _ARTICLE = re.compile(r"^(?:a|an|the|some)\s+", re.I)
 _SUBSTANCE_PREFIX = re.compile(r"^substance called\s+", re.I)
 _GENERIC = {"substance", "thing", "object", "animal", "plant", "living thing", "non-living thing"}
 
-# The instruction header shown to an LLM consumer (ReAct prompt): rooms, action grammar and the rule for 'focus on'.
 SYSTEM_PROMPT = (
     "Interact with the environment to solve a scientific experiment.\n"
     "In the environment, there are several rooms: kitchen, foundry, workshop, bathroom, outside,\n"
@@ -111,7 +102,7 @@ SYSTEM_PROMPT = (
 
 
 def task_type(description: str, known: str | None = None) -> str:
-    """The task type: `known` when given, else the type whose training descriptions overlap most with this one."""
+    """`known` when given, else the type whose training descriptions overlap most with this one."""
     if known in PLANS:
         return known
     words = set(_WORD.findall(description.lower()))
@@ -186,7 +177,8 @@ def _room_contents(look: str) -> list[str]:
 
 def bind_plan(operators: Sequence[str], description: str, rooms: dict[str, list[str]] | None = None) -> Plan:
     """Target bindings: the object the task is scored on and the destination it names, from the description;
-    the substance to heat or cool, the heat source, the cold place and the containers from the scanned rooms."""
+    the substance to heat or cool, the heat source, the cold place and the containers from the scanned
+    rooms."""
     rooms = rooms or {}
     everything = [o for objects in rooms.values() for o in objects]
     focus = _FOCUS.search(description)
@@ -226,13 +218,11 @@ def bind_plan(operators: Sequence[str], description: str, rooms: dict[str, list[
     return tuple(plan)
 
 
-# ---------------------------------------------------------------- plans from the gold traces
-
 def gold_operators(trajectory: Sequence[tuple[str, str, float, str | None]], start_inventory: str | None,
                    labeler: "ScienceWorldLabeler") -> list[str]:
-    """The operator sequence of one gold trace: a subtrace closes at a confirmed change of the inventory (a pick up
-    or a move out of it) or at a score increase, and is named by the last action of the window that realizes an
-    operator. Windows that only move about are not operators."""
+    """The operator sequence of one gold trace: a subtrace closes at a confirmed change of the inventory (a
+    pick up or a move out of it) or at a score increase, and is named by the last action of the window that
+    realizes an operator."""
     operators, window, best = [], [], 0.0
     before = _inventory_count(start_inventory)
     for action, observation, score, inventory in trajectory:
@@ -285,8 +275,9 @@ def _init_replay():
 
 
 def build_plans(variations: int, workers: int, out: Path | None = None) -> dict:
-    """One plan per task type: replay the gold traces of up to `variations` training variations, segment them, and
-    keep the most frequent operator sequence; the training descriptions recognise the type of a new task."""
+    """One plan per task type: replay the gold traces of up to `variations` training variations, segment them,
+    and keep the most frequent operator sequence; the training descriptions recognise the type of a new
+    task."""
     from scienceworld import ScienceWorldEnv
 
     env = ScienceWorldEnv(envStepLimit=100000)
@@ -309,7 +300,7 @@ def build_plans(variations: int, workers: int, out: Path | None = None) -> dict:
 
 
 class ScienceWorldApplication:
-    """The ScienceWorld simulator. Task ids are '<task type>:<variation>'."""
+    """Task ids are '<task type>:<variation>'."""
 
     name = "scienceworld"
     operators = OPERATORS

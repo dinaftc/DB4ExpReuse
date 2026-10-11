@@ -1,13 +1,6 @@
-"""Exact versus HNSW goal-similarity lookup with pgvector (Section 4.5).
-
-Compares, for a set of query goals, the latency of exact search and of HNSW at
-several ef_search values, and how often HNSW returns the same nearest goal, the
-same top-10 set and the same CASCADE route (best similarity >= theta).
+"""Exact versus HNSW goal-similarity lookup with pgvector.
 
     python -m expreuse.bench.ann --dsn postgresql:///expreuse --goals 1000000 --ef 40,400
-
-Without --goal-file, goals are synthetic: base goal embeddings plus Gaussian
-noise, renormalized.
 """
 from __future__ import annotations
 

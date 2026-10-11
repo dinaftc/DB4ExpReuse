@@ -1,4 +1,4 @@
-"""Reuse queries (Section 3.3) over a physical realization of the data model."""
+"""Reuse queries over a physical realization of the data model."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -8,9 +8,8 @@ from ..model import Experience, ReuseRequest, StoredTrace, SubtraceHit, TraceHit
 
 
 class ExperienceStore(ABC):
-    """A physical realization. All realizations must return the same experience
-    for the same request: candidates are ordered by goal similarity
-    (descending), then length (ascending), then identifier."""
+    """A physical realization. Candidates are ordered by goal similarity (descending), then length
+    (ascending), then identifier, so all realizations return the same answer."""
 
     @abstractmethod
     def setup(self, reset: bool = False) -> None:
@@ -37,8 +36,7 @@ class ExperienceStore(ABC):
         pass
 
     def subtraces(self, request: ReuseRequest) -> list[list[SubtraceHit]]:
-        """SUBTRACES: hits for each plan position, in plan order. A position
-        whose operator has no eligible subtrace is left empty (uncovered)."""
+        """SUBTRACES: hits for each plan position, in plan order."""
         found = self.subtraces_for(request, list(dict.fromkeys(request.plan)))
         return [list(found.get(op, [])) for op in request.plan]
 

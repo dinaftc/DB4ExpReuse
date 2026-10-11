@@ -1,5 +1,5 @@
-"""The policy consumers' pure parts: gold-step matching and state text for the imitation policy, its scoring head,
-and the DAgger policy's score normalisation. The simulators and trained checkpoints are not needed."""
+"""The policy consumers' pure parts: gold-step matching and state text for the imitation policy, its scoring
+head, and the DAgger policy's score normalisation."""
 import random
 
 import numpy as np
@@ -14,7 +14,7 @@ def test_gold_step_matches_the_valid_list():
     assert canonical("focus on apple", valid) == "focus on apple tree"
     assert canonical("examine thermometer", valid) == "look at thermometer"
     assert canonical("pick up thermometer in inventory", valid) == "pick up thermometer"
-    assert canonical("pick up", {"pick up a", "pick up b"}) is None  # ambiguous: no example
+    assert canonical("pick up", {"pick up a", "pick up b"}) is None
 
 
 def test_negatives_prefer_confusable_actions():

@@ -1,11 +1,7 @@
-"""Retrieval and insertion latency as the database grows (Figure 3a, Table 6).
+"""Retrieval and insertion latency as the database grows.
 
-    python -m expreuse.bench.latency --realization relational,jsonb,qdrant --dsn postgresql:///expreuse \\
-        --url http://localhost:6333 --sizes 2000,13000,100000,1000000
-
-Every realization is loaded with the same traces; at each size the script reports, per realization, the
-median latency of Whole, Subtraces and Cascade over the evaluation requests, the median latency of inserting
-one completed trace, and whether its answers equal the first realization's.
+    python -m expreuse.bench.latency --realization relational,jsonb,qdrant --dsn postgresql:///expreuse \
+    --url http://localhost:6333 --sizes 2000,13000,100000,1000000
 """
 from __future__ import annotations
 
@@ -49,7 +45,7 @@ def main() -> None:
         stored = grow(list(stores.values()), stream, stored, size)
         fresh = None
         for kind, store in stores.items():
-            for r in requests[:20]:  # warm up
+            for r in requests[:20]:
                 store.cascade(r, args.theta)
             row = {"realization": kind, "subtraces": stored}
             row["whole_ms"], whole = timed(store.whole, requests)
@@ -59,7 +55,7 @@ def main() -> None:
                              [tuple(tuple((h.trace_id, h.subgoal_id) for h in hits) for hits in a)
                               for a in subtraces], [signature(a) for a in cascade])
             row["identical"] = answers[kind] == answers[next(iter(stores))]
-            if fresh is None:  # the same completed traces are inserted into every realization
+            if fresh is None:
                 fresh = [next(stream) for _ in range(args.inserts)]
             row["insert_ms"], _ = timed(store.insert, fresh)
             print(json.dumps(row), flush=True)

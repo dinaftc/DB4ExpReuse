@@ -99,7 +99,7 @@ class PostgresStore(ExperienceStore):
                 "producer": request.producer, "k": request.k}
 
     def create_goal_index(self, m: int = 16, ef_construction: int = 64) -> None:
-        """Optional HNSW index for approximate goal search (Section 4.5)."""
+        """Optional HNSW index for approximate goal search."""
         self.conn.execute(
             "CREATE INDEX IF NOT EXISTS goal_hnsw_idx ON goal USING hnsw "
             f"(embedding vector_cosine_ops) WITH (m = {int(m)}, "

@@ -1,5 +1,5 @@
-"""In-memory reference realization: a direct transcription of the query
-definitions, used as the oracle the other realizations are checked against."""
+"""In-memory reference realization: a direct transcription of the query definitions, used as the oracle the
+other realizations are checked against."""
 from __future__ import annotations
 
 import numpy as np

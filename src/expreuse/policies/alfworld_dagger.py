@@ -1,9 +1,5 @@
 """ALFWorld's TextDAgger policy (Shridhar et al., 2021) as a policy consumer, and its training.
 
-Training is ALFWorld's own DAgger recipe (`alfworld_dagger_train.py`, `alfworld_dagger.yaml`) on the training
-games minus the ones the experience stores were collected on, with `valid_seen` for checkpoint selection. The
-trained policy scores every admissible command; `ShapedPolicy` adds the experience term to those scores.
-
     python -m expreuse.policies.alfworld_dagger prepare --exclude data/alfworld/tasks.csv --target data/alfworld_dagger_train
     DAGGER_TRAIN_DATA=data/alfworld_dagger_train/json_2.1.1/train DAGGER_MODELS=data/models/alfworld_dagger \\
         python -m expreuse.policies.alfworld_dagger_train src/expreuse/policies/alfworld_dagger.yaml
@@ -29,8 +25,8 @@ DATA = Path(os.environ.get("ALFWORLD_DATA", os.path.expanduser("~/.cache/alfworl
 
 
 def prepare_training_split(excluded: set[str], target: Path, source: Path = DATA / "json_2.1.1/train") -> int:
-    """Copy (hard-link where possible) the training games except the excluded ones, given as task ids
-    (game files relative to the data folder) or task-folder names. Returns the number of games kept."""
+    """Copy (hard-link where possible) the training games except the excluded ones, given as task ids (game
+    files relative to the data folder) or task-folder names."""
     kept = 0
     for game in sorted(source.rglob("game.tw-pddl")):
         trial = game.parent
@@ -64,9 +60,7 @@ def load_agent(checkpoint: str | Path, config: str | Path = CONFIG, cuda: bool =
 
 
 class DaggerPolicy:
-    """`BasePolicy` over the admissible commands. The agent keeps its own observation history, so the policy
-    follows the episode step by step: a history of length one starts a game, each longer history advances it.
-    `temperature` divides the raw scores (fit on valid_seen by `calibrate`)."""
+    """`BasePolicy` over the admissible commands."""
 
     def __init__(self, checkpoint: str | Path, config: str | Path = CONFIG, temperature: float | None = None,
                  cuda: bool = False):
@@ -129,9 +123,8 @@ class DaggerPolicy:
 
 
 def calibrate(checkpoint: Path, app, tasks: Sequence[str], config: Path = CONFIG) -> float:
-    """Fit the temperature that minimises the negative log-likelihood of the policy's own choices as the game
-    expert would make them: here, of the action the policy takes, over the admissible list, on the given games
-    (the valid_seen games). Writes calibration.json beside the checkpoint and returns the temperature."""
+    """Fit the temperature that minimises the negative log-likelihood of the policy's own choices on the given
+    games; written to calibration.json beside the checkpoint."""
     policy = DaggerPolicy(checkpoint, config, temperature=1.0)
     logits = []
     for task_id in tasks:

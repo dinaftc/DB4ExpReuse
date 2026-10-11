@@ -1,16 +1,6 @@
 """ALFWorld (Shridhar et al., 2021): text household tasks of six types, one room each.
 
-Operators are the milestone actions of the game (take, put, heat, cool, clean, use); navigation and opening are
-setup steps of the operator they precede. The task plan's operators are derived from the goal text
-(`goal_operators`); the expert plan in the game's PDDL is only used to confirm that mapping (`confirm_plans`).
-The plan's bindings, which grounding substitutes for the entities of the stored subtraces, come from a scripted
-scan of the room (every receptacle visited and opened, not charged to the task's step budget).
-
     python -m expreuse.envs.alfworld confirm-plans --tasks data/tasks/alfworld_evaluation.txt
-
-`bindings="pddl"` instead reads the bindings from the game's expert plan and PDDL problem. Those are the objects
-and locations of the task's solution, so that setting gives the consumer oracle information; `bindings="none"`
-leaves the plan unbound (grounding then changes nothing).
 """
 from __future__ import annotations
 
@@ -28,7 +18,7 @@ from ..operators import ALFWORLD as OPERATORS
 
 DATA = Path(os.environ.get("ALFWORLD_DATA", os.path.expanduser("~/.cache/alfworld")))
 MAX_STEPS = 40
-SCAN_BUDGET = 30  # receptacles visited by the scan
+SCAN_BUDGET = 30
 BINDINGS = ("scan", "pddl", "none")
 PLANNER_OPERATORS = {"PickupObject": "take", "PutObject": "put", "HeatObject": "heat", "CoolObject": "cool",
                      "CleanObject": "clean", "ToggleObject": "use"}
@@ -43,7 +33,6 @@ _ARTICLE = re.compile(r"^(?:a|an|some|the)\s+", re.I)
 APPLIANCE_OF = {"heat": "microwave", "cool": "fridge", "clean": "sinkbasin", "use": "desklamp"}
 APPLIANCES = ("microwave", "fridge", "sinkbasin", "sink")
 
-# The static action interface shown to an LLM consumer: the action forms, no per-step list of valid actions.
 ACTION_TEMPLATES = (
     "go to [receptacle]",
     "open [receptacle]",
@@ -107,8 +96,6 @@ def goal_entities(goal: str) -> tuple[str | None, str | None]:
     return (obj.group(1) if obj else None), (destination.group(1) if destination else None)
 
 
-# ---------------------------------------------------------------- bindings from the scanned room
-
 def _contents(observation: str) -> list[str]:
     match = _SEE.search(observation.strip())
     if not match or "nothing" in match.group(1).lower():
@@ -118,7 +105,7 @@ def _contents(observation: str) -> list[str]:
 
 def bind_plan(operators: Sequence[str], goal: str, room: dict[str, list[str]] | None) -> Plan:
     """Target bindings from the scanned room: the goal's object where the scan saw it, the destination of the
-    goal's type, and the appliance each transform needs. Unknown entities leave the role unbound."""
+    goal's type, and the appliance each transform needs."""
     object_type, destination_type = goal_entities(goal)
     room = room or {}
     objects = [(obj, place) for place, contents in room.items() for obj in contents
@@ -126,7 +113,7 @@ def bind_plan(operators: Sequence[str], goal: str, room: dict[str, list[str]] | 
     receptacles = {}
     for place in room:
         receptacles.setdefault(_type(place), place)
-    seen = {}  # objects the scan saw, by type (a lamp stands on a receptacle)
+    seen = {}
     for contents in room.values():
         for obj in contents:
             seen.setdefault(_type(obj), obj)
@@ -150,8 +137,6 @@ def bind_plan(operators: Sequence[str], goal: str, room: dict[str, list[str]] | 
     return tuple(plan)
 
 
-# ---------------------------------------------------------------- the expert plan of the game's PDDL
-
 def mangle(object_id: str) -> str:
     """A simulator object id ('Apple|-00.59|+00.83|-00.40') as the object's name in the game's PDDL."""
     return (object_id.replace("|", "_bar_").replace("-", "_minus_").replace("+", "_plus_")
@@ -159,8 +144,7 @@ def mangle(object_id: str) -> str:
 
 
 def entity_names(problem: str) -> dict[str, str]:
-    """PDDL object name -> the numbered name the game shows ('apple 1'). The game sorts the instances of a type by
-    PDDL name and numbers them from the highest number down; a sink's basin is its own type."""
+    """PDDL object name -> the numbered name the game shows ('apple 1')."""
     objects = problem.split("(:objects", 1)[1].split("(:init", 1)[0]
     ids = sorted(token.lower() for token in re.findall(r"\S+", objects) if "_bar_" in token)
 
@@ -186,9 +170,8 @@ def task_parameters(game: Path) -> dict[str, str]:
 
 
 def pddl_plan(game: Path) -> Plan:
-    """The task plan of a game: the manipulation actions of the expert plan as operators, bound to the game's names
-    of the objects, receptacles and appliances they use. The receptacle an object is taken from is the one the
-    initial state places it in or at; it is left unbound when the state does not determine it."""
+    """The task plan of a game: the manipulation actions of the expert plan as operators, bound to the game's
+    names of the objects, receptacles and appliances they use."""
     problem = json.loads(game.read_text())["pddl_problem"]
     expert = json.loads((game.parent / "traj_data.json").read_text())["plan"]["high_pddl"]
     names = entity_names(problem)
@@ -230,12 +213,8 @@ def pddl_plan(game: Path) -> Plan:
     return tuple(plan)
 
 
-# ---------------------------------------------------------------- segmentation rules
-
 class AlfworldLabeler:
-    """Which operator an action realizes, when it completed its subgoal, and the entities it bound. A put into an
-    appliance is a milestone only when the appliance is the task's destination (`destination`, the type from the
-    task's PDDL, or else the one the goal text names)."""
+    """Which operator an action realizes, when it completed its subgoal, and the entities it bound."""
 
     def __init__(self, goal: str | None = None, destination: str | None = None):
         self.goal, self.destination = goal, destination
@@ -274,8 +253,6 @@ class AlfworldLabeler:
         return {}
 
 
-# ---------------------------------------------------------------- the environment
-
 SPLITS = {"train": "train", "valid_seen": "valid_seen", "valid_unseen": "valid_unseen",
           "eval_in_distribution": "valid_seen", "eval_out_of_distribution": "valid_unseen"}
 
@@ -294,9 +271,7 @@ def _patch_textworld() -> None:
 
 
 class AlfworldApplication:
-    """The ALFWorld text environment, one game at a time through TextWorld with ALFWorld's own wrappers (the
-    object numbering and the task information; on the training split also the handcoded expert, whose next
-    action `expert_action` reports). Task ids are the game files relative to `ALFWORLD_DATA`."""
+    """Task ids are the game files relative to `ALFWORLD_DATA`."""
 
     name = "alfworld"
     operators = OPERATORS
@@ -362,8 +337,7 @@ class AlfworldApplication:
         return room
 
     def plan(self, task: Task) -> Plan:
-        """Operators from the goal text; bindings as `bindings` says. The scan plays in the game, which `reset`
-        restarts before the task is solved."""
+        """Operators from the goal text; bindings as `bindings` says."""
         self.labeler.goal, self.labeler.destination = task.goal, None
         operators = goal_operators(task.goal)
         if self.bindings == "pddl":
@@ -401,8 +375,8 @@ class AlfworldApplication:
 
 
 def confirm_plans(task_ids: Sequence[str], goals: dict[str, str]) -> list[tuple[str, tuple[str, ...], tuple[str, ...]]]:
-    """Tasks whose goal-derived operators differ from those of the game's expert PDDL plan, as
-    (task id, from the goal, from the PDDL). Empty when the PDDL confirms the mapping for every task."""
+    """Tasks whose goal-derived operators differ from those of the game's expert PDDL plan, as (task id, from
+    the goal, from the PDDL)."""
     differing = []
     for task_id in task_ids:
         derived = goal_operators(goals[task_id])

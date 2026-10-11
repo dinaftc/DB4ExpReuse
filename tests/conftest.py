@@ -21,8 +21,7 @@ def traces(embedder):
 
 
 def open_realization(kind, suffix=""):
-    """Realizations needing a service are skipped unless it is configured:
-    EXPREUSE_TEST_DSN for PostgreSQL; Qdrant runs in-process."""
+    """Realizations needing a service are skipped unless it is configured."""
     if kind in ("relational", "jsonb"):
         dsn = os.environ.get("EXPREUSE_TEST_DSN")
         if not dsn:

@@ -1,10 +1,5 @@
-"""Partial subtrace coverage: withhold a share of the subtraces of a SUBTRACES answer before the consumer sees it.
-
-A withholding level f removes round(f * n) of the n covered plan positions from the answer; the removed positions
-become uncovered, as if the store held no subtrace for them. Two removal schedules: every possible subset of that
-size (`all_removals`, averaged by the caller; for short answers), or one random ordering per task, nested across
-levels so that what is removed at 25% stays removed at 50% (`nested_removals`; for long answers).
-"""
+"""Partial subtrace coverage: withhold a share of the subtraces of a SUBTRACES answer before the consumer sees
+it."""
 from __future__ import annotations
 
 import hashlib

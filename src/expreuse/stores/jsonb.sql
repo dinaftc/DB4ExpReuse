@@ -1,4 +1,3 @@
--- JSONB realization: one row per trace, holding its subtraces and steps.
 CREATE TABLE IF NOT EXISTS goal (
     goal_id     bigserial PRIMARY KEY,
     application text NOT NULL,
@@ -6,8 +5,7 @@ CREATE TABLE IF NOT EXISTS goal (
     embedding   vector({dim}) NOT NULL,
     UNIQUE (application, goal)
 );
--- Keep embeddings inline: exact search scans every goal, and fetching each
--- vector from TOAST would dominate the scan.
+-- inline storage: exact search scans every goal, and TOAST fetches would dominate it
 ALTER TABLE goal ALTER COLUMN embedding SET STORAGE PLAIN;
 CREATE TABLE IF NOT EXISTS trace_doc (
     trace_id text PRIMARY KEY,
@@ -16,8 +14,7 @@ CREATE TABLE IF NOT EXISTS trace_doc (
     producer text NOT NULL,
     success  boolean NOT NULL,
     length   integer NOT NULL,
-    -- operators with a finished, fitting subtrace: lets eligibility be
-    -- checked without reading the document
+    -- operators with a finished, fitting subtrace
     operators text[] NOT NULL,
     -- {"subtraces": [{subgoal_id, operator, binding, finished, fits, length,
     --                 steps: [{step_index, action, observation}]}],

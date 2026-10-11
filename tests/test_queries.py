@@ -10,8 +10,6 @@ from conftest import DIM, open_realization
 
 @pytest.fixture(scope="module")
 def requests(embedder):
-    # Goals drawn from the same generator with another seed: some match stored
-    # goals exactly, others only partially.
     targets = make_traces(40, seed=99, embedder=embedder)
     return [ReuseRequest(t.task.embedding, producer, ("alfworld",),
                          tuple(s.operator for s in t.subtraces) or ("take",), k)
@@ -125,9 +123,7 @@ def _hand_built():
 
 
 def test_definitions_on_hand_built_traces():
-    """The query definitions, case by case: most similar goal first, then the shorter trace; failed traces never
-    whole answers but their finished, fitting subtraces eligible; unfitting or unfinished subtraces skipped;
-    uncovered operators; repeated operators; the application constraint; Cascade's routing."""
+    """The query definitions, case by case."""
     store = MemoryStore()
     store.insert_many(_hand_built())
     q = _vector(1, 0.05)

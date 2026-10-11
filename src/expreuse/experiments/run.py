@@ -1,12 +1,6 @@
 """Run one condition: a consumer on a task list, with or without a reuse query, repeated `runs` times.
 
     python -m expreuse.experiments.run --application alfworld --consumer gemma --mode cascade
-
-The condition's store is `stores/<application>_<consumer>.jsonl`: another consumer's with --source, the other
-application's with --cross-application, or any trace files with --store. One JSON line per episode (task, run,
-success, route, best-trace similarity, plan, covered positions, steps, seconds per component, tokens); episodes
-already in the output are skipped, so an interrupted condition resumes. With --collect the consumer acts as a
-producer: its traces are appended to its own store file. Settings not given here come from `expreuse.config`.
 """
 from __future__ import annotations
 
@@ -29,7 +23,7 @@ from .grid import MODES, Condition
 @dataclass(frozen=True)
 class Settings:
     stores: str = "stores"
-    store_files: tuple[str, ...] = ()  # trace files read instead of the condition's store
+    store_files: tuple[str, ...] = ()
     realization: str = "memory"
     dsn: str | None = None
     url: str | None = None
@@ -115,8 +109,7 @@ class Withholding:
 
 
 def withholdings(cond: Condition, app, task, store, reuse, embedder) -> list[Withholding | None]:
-    """The removals to play for a task: none, every subset of the level's size, or the task's nested ordering.
-    The query is run once here to see which plan positions the answer covers."""
+    """The removals to play for a task: none, every subset of the level's size, or the task's nested ordering."""
     if not cond.withhold:
         return [None]
     task = replace(task, embedding=embedder.encode([task.goal])[0])

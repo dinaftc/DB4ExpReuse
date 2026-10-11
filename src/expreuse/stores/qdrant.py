@@ -1,11 +1,4 @@
-"""Vector realization in Qdrant.
-
-Goal embeddings live in one collection; traces and subtraces are separate
-payload-only collections reached through indexed keys. Each goal point carries
-the eligibility keys of its experience (producers with a successful trace,
-producer/operator pairs with a finished, fitting subtrace), so the structured
-predicates are applied as filters during the similarity search.
-"""
+"""Vector realization in Qdrant."""
 from __future__ import annotations
 
 import threading

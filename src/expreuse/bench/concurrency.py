@@ -1,10 +1,6 @@
-"""Throughput under concurrent consumers and producers (Figure 3b).
+"""Throughput under concurrent consumers and producers, on a database already populated by bench.latency.
 
-Run against a database already populated by expreuse.bench.latency with the
-same base traces; this script does not reset it.
-
-    python -m expreuse.bench.concurrency --dsn postgresql:///expreuse \
-        --clients 1,4,16,32,64 --insert-fraction 0.1
+    python -m expreuse.bench.concurrency --dsn postgresql:///expreuse --clients 1,4,16,32,64 --insert-fraction 0.1
 """
 from __future__ import annotations
 
@@ -54,7 +50,6 @@ def main() -> None:
     embedder = make_embedder(args.embedder)
     base = load_base(args, embedder)
     requests = requests_from(base, 1000, args.seed)
-    # Fresh copies with identifiers unique to this run, so reruns do not collide.
     fresh = scaled(base, embedder, args.seed, tag=uuid.uuid4().hex[:8] + "-",
                    include_base=False)
     lock = threading.Lock()

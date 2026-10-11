@@ -18,10 +18,7 @@ from alfworld.agents.agent import TextDAggerAgent
 from alfworld.agents.utils.misc import extract_admissible_commands
 from alfworld.agents.modules.generic import HistoryScoreCache, EpisodicCountingMemory, ObjCentricEpisodicMemory
 
-# change 2: ALFWorld 0.4.2's handcoded expert calls random.choice on an empty list (handcoded_expert.py
-# l.318, its 'use'/'slice' branch) when the student has left the state that branch expects; the game worker dies
-# and training with it. There the expert answers 'look' instead, which is what this script already does when
-# the expert has no plan. Patched here, before the workers fork, so each inherits it; every fallback is logged.
+# change 2: where ALFWorld's handcoded expert would crash on an empty choice, it answers 'look'.
 from alfworld.agents.expert import handcoded_expert as _handcoded_expert
 _expert_act = _handcoded_expert.BasePolicy.act
 
@@ -37,11 +34,7 @@ def _expert_act_or_look(self, game_state, last_action):
 _handcoded_expert.BasePolicy.act = _expert_act_or_look
 
 
-# change 4: resume. After every report (each 1000 episodes) the training state is written to
-# <save_path>/<tag>_resume.pt (atomically): weights, optimizer, episode counter (the expert share is computed from
-# it), step counter, best scores, running averages, elapsed time and random states. With DAGGER_RESUME=1 the run
-# continues from that file. The DAgger example memory is NOT saved (several GB of text): after a resume it refills
-# within a few hundred episodes.
+# change 4: resume. The training state is saved after every report; DAGGER_RESUME=1 continues from it.
 import random as _random
 
 import torch as _torch
@@ -81,9 +74,7 @@ def train():
     time_1 = datetime.datetime.now()
     step_time = []
     config = generic.load_config()
-    # change: the game workers (one forked process per game in a batch) are created BEFORE the agent,
-    # because forking after torch/DistilBERT have started their threads kills the workers silently on CPU.
-    # Batch sizes and run_eval are read from the config, which is where the agent reads them too.
+    # change 1: the game workers are created before the agent (forking after torch starts its threads kills them)
     alfred_env = get_environment(config["env"]["type"])(config, train_eval="train")
     env = alfred_env.init_env(batch_size=config["general"]["training"]["batch_size"])
 
@@ -301,9 +292,7 @@ def train():
         # finish game
         agent.finish_of_episode(episode_no, batch_size)
         episode_no += batch_size
-        # change 3: one line per batch in <save_path>/<tag>_progress.tsv, so progress shows between the
-        # every-1000-episode reports (experiments/status.sh reads it): time, episodes, max, episodes/s, loss,
-        # expert-driven success, student success, fraction of steps the expert takes
+        # change 3: one progress line per batch in <save_path>/<tag>_progress.tsv
         with open(os.path.join(output_dir, agent.experiment_tag + "_progress.tsv"), "a") as progress:
             now = datetime.datetime.now()
             spent = max((now - time_1).total_seconds(), 1.0)

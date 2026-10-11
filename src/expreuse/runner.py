@@ -1,4 +1,4 @@
-"""End-to-end loop of Figure 1: plan, reuse query, act, store the trace."""
+"""Plan, reuse query, act, store the trace."""
 from __future__ import annotations
 
 import time
@@ -17,12 +17,12 @@ from .stores.base import ExperienceStore
 
 @dataclass(frozen=True)
 class ReuseConfig:
-    mode: str = "none"  # none | whole | subtraces | cascade
-    producer: str = ""  # r: whose experience is requested
-    applications: tuple[str, ...] = ()  # default: the target application
-    theta: float | None = None  # CASCADE threshold
+    mode: str = "none"
+    producer: str = ""
+    applications: tuple[str, ...] = ()
+    theta: float | None = None
     k: int = 1
-    ground: bool = True  # within-application only
+    ground: bool = True
 
 
 @dataclass
@@ -31,14 +31,13 @@ class Episode:
     success: bool
     experience: Experience
     stored: StoredTrace
-    seconds: dict[str, float] = field(default_factory=dict)  # per component
+    seconds: dict[str, float] = field(default_factory=dict)
     plan: Plan = ()
 
 
 def retrieve(store: ExperienceStore, task: Task, plan: Plan, config: ReuseConfig
              ) -> tuple[Experience, bool]:
-    """Run the reuse query for a task. Returns the answer and whether it comes
-    from another application; cross-application answers are not grounded."""
+    """Returns the answer and whether it comes from another application (such answers are not grounded)."""
     applications = config.applications or (task.application,)
     cross = task.application not in applications
     request = ReuseRequest(task.embedding, config.producer, applications,
@@ -54,9 +53,8 @@ def run_task(app: Application, consumer: Consumer, task: Task, embedder: Embedde
              config: ReuseConfig = ReuseConfig(), store_as: str | None = None,
              shape: Callable[[Experience], Experience] | None = None
              ) -> Episode:
-    """Solve one task. With `store_as`, the resulting trace is segmented and
-    inserted as experience of that producer. `shape` edits the query's answer
-    before the consumer sees it (the coverage ablation withholds subtraces)."""
+    """With `store_as`, the trace is segmented and stored as that producer's experience; `shape` edits the
+    query's answer before the consumer sees it."""
     seconds = {"retrieval": 0.0, "environment": 0.0, "consumer": 0.0}
     if task.embedding is None:
         task = replace(task, embedding=embedder.encode([task.goal])[0])

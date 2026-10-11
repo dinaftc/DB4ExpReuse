@@ -12,7 +12,7 @@ class Application(Protocol):
     name: str
     operators: OperatorLibrary
     labeler: StepLabeler
-    system_prompt: str  # how an LLM consumer should act in this application
+    system_prompt: str
 
     def plan(self, task: Task) -> Plan:
         """The task plan P_t with target bindings where known."""

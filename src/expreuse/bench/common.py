@@ -1,4 +1,4 @@
-"""Shared pieces of the system benchmarks (Section 4.5)."""
+"""Shared pieces of the system benchmarks."""
 from __future__ import annotations
 
 import argparse
@@ -52,13 +52,7 @@ def _entity_class(entity: str) -> str:
 
 def scaled(base: list[StoredTrace], embedder: Embedder, seed: int = 0,
            tag: str = "", include_base: bool = True) -> Iterator[StoredTrace]:
-    """Endless stream of stored traces: the base traces, then copies.
-
-    A copy keeps the actions, subtrace structure, step count and success of
-    its original, and gets new identifiers and a new goal and entities, by
-    renaming each entity class bound in the trace to another known class.
-    `tag` namespaces the identifiers of the copies.
-    """
+    """Endless stream of stored traces: the base traces, then copies."""
     if include_base:
         yield from base
     rng = random.Random(seed)

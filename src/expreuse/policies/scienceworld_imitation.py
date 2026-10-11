@@ -1,17 +1,10 @@
-"""An imitation policy for ScienceWorld, trained by behaviour cloning on the simulator's gold action sequences.
-
-The policy scores every valid action of a state. A state is the task description, the last three actions with the
-last observation, the room and the inventory; each text is embedded by a frozen sentence encoder (all-MiniLM-L6-v2)
-and a small trained head scores (state, action) pairs. Training examples come from replaying the gold paths of the
-training variations, the ones the experience stores were collected on left out, and, as in DART (Laskey et al.,
-2017), from one or two harmless detours after a gold step, labelled with the pending gold action. Every epoch is
-kept; the epoch that plays the dev games best is selected, and a temperature is fitted on the dev states so that
-the experience term is added to calibrated log-probabilities.
+"""An imitation policy for ScienceWorld, trained by behaviour cloning on the simulator's gold action
+sequences.
 
     python -m expreuse.policies.scienceworld_imitation data --exclude store_games.txt --workers 24
     python -m expreuse.policies.scienceworld_imitation embed
     python -m expreuse.policies.scienceworld_imitation train --epochs 6
-    python -m expreuse.policies.scienceworld_imitation select --dev-games 2      # plays the dev games per epoch
+    python -m expreuse.policies.scienceworld_imitation select --dev-games 2
     python -m expreuse.policies.scienceworld_imitation calibrate
 """
 from __future__ import annotations
@@ -37,15 +30,12 @@ DATA = Path(os.environ.get("IMITATION_DATA", "data/imitation/scienceworld"))
 MODELS = Path(os.environ.get("IMITATION_MODELS", "data/models/scienceworld_imitation"))
 ENCODER = "sentence-transformers/all-MiniLM-L6-v2"
 FIELDS = ("goal", "hist", "look", "inv")
-HISTORY = 3  # past actions in the state
-NEGATIVES_HARD, NEGATIVES_RANDOM = 32, 32  # sampled valid actions per training step, besides the gold one
-PERTURB = 0.3  # probability of a harmless detour after a gold step
+HISTORY = 3
+NEGATIVES_HARD, NEGATIVES_RANDOM = 32, 32
+PERTURB = 0.3
 SIMPLIFICATION = "easy"
 _NOOP = re.compile(r"\balready\b|No known action matches", re.IGNORECASE)
 _ENV = None
-
-
-# ---------------------------------------------------------------- training data from the gold paths
 
 
 def _contains_in_order(words, longer):
@@ -54,9 +44,9 @@ def _contains_in_order(words, longer):
 
 
 def canonical(action: str, valid: set[str]) -> str | None:
-    """The valid-list action a gold step names: the step as written, its parser aliases ('examine' -> 'look at',
-    'X in inventory' -> 'X'), or the one valid action with the same verb that contains the step's words in order.
-    None when none or several fit."""
+    """The valid-list action a gold step names: the step as written, its parser aliases ('examine' -> 'look
+    at', 'X in inventory' -> 'X'), or the one valid action with the same verb that contains the step's
+    words in order."""
     if action in valid:
         return action
     alias = re.sub(r"^examine ", "look at ", action).replace(" in inventory", "")
@@ -143,8 +133,8 @@ def replay(job):
 
 
 def build_data(excluded: set[str], workers: int, dev_per_type: int) -> None:
-    """Replay every training variation except `excluded` ('task:variation' ids) and `dev_per_type` dev variations
-    per task type; writes train.jsonl, dev.jsonl and data_report.json under DATA."""
+    """Replay every training variation except `excluded` ('task:variation' ids) and `dev_per_type` dev
+    variations per task type; writes train.jsonl, dev.jsonl and data_report.json under DATA."""
     from scienceworld import ScienceWorldEnv
 
     env = ScienceWorldEnv(envStepLimit=100000)
@@ -170,9 +160,6 @@ def build_data(excluded: set[str], workers: int, dev_per_type: int) -> None:
             report[split] = {"games": len(mine), **counts}
             print(f"{split}: {len(mine)} games, {dict(counts)}", flush=True)
     (DATA / "data_report.json").write_text(json.dumps(report, indent=1))
-
-
-# ---------------------------------------------------------------- the model
 
 
 def _encoder(threads: int):
@@ -254,7 +241,7 @@ def train(threads: int, epochs: int, batches_per_epoch: int, batch: int, lr: flo
             for line in f:
                 e = json.loads(line)
                 states.append([index[fld][e[fld]] for fld in FIELDS])
-                pool = [e["target"]] + [c for c in e["candidates"] if c != e["target"]]  # the gold action first
+                pool = [e["target"]] + [c for c in e["candidates"] if c != e["target"]]
                 candidates.append(np.array([index["action"][c] for c in pool], dtype=np.int64))
                 tasks.append(e["task"])
         return np.array(states, dtype=np.int64), candidates, tasks
@@ -303,8 +290,8 @@ def train(threads: int, epochs: int, batches_per_epoch: int, batch: int, lr: flo
 
 
 def select(dev_per_type: int, max_steps: int | None = None) -> str:
-    """Play the dev games with every saved epoch and promote the one with the highest success (ties: mean score)
-    to MODELS itself, where `ImitationPolicy` loads it."""
+    """Play the dev games with every saved epoch and promote the one with the highest success (ties: mean
+    score) to MODELS itself, where `ImitationPolicy` loads it."""
     from ..envs.scienceworld import ScienceWorldApplication
 
     app = ScienceWorldApplication()
@@ -340,8 +327,8 @@ def select(dev_per_type: int, max_steps: int | None = None) -> str:
 
 
 def calibrate(models: Path = MODELS) -> float:
-    """Fit the temperature that minimises the negative log-likelihood of the gold action over the valid list on
-    the dev states (Guo et al., 2017); stored in the model's config."""
+    """Fit the temperature that minimises the negative log-likelihood of the gold action over the valid list
+    on the dev states (Guo et al., 2017); stored in the model's config."""
     import torch
 
     config = json.loads((models / "config.json").read_text())
@@ -368,13 +355,8 @@ def calibrate(models: Path = MODELS) -> float:
     return temperature
 
 
-# ---------------------------------------------------------------- the policy consumer
-
-
 class ImitationPolicy:
-    """`BasePolicy` over the valid actions. `app` supplies the room and inventory texts of the current state
-    (`state_fields`). An action already taken from exactly the same state is set aside while another is left, so
-    that an action which changes nothing does not repeat until the step limit."""
+    """`BasePolicy` over the valid actions."""
 
     def __init__(self, directory: str | Path, app=None, threads: int = 2):
         import torch

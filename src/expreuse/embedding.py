@@ -45,8 +45,7 @@ class SentenceTransformerEmbedder:
 
 
 class HashEmbedder:
-    """Deterministic bag-of-words embedding. For tests and benchmarks that
-    need embeddings without loading a model; not a semantic encoder."""
+    """Deterministic bag-of-words embedding for tests and benchmarks; not a semantic encoder."""
 
     def __init__(self, dim: int = 64):
         self.dim = dim

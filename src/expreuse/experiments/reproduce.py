@@ -2,12 +2,9 @@
 
     python -m expreuse.experiments.reproduce same_application --list
     python -m expreuse.experiments.reproduce collect_stores
-    python -m expreuse.experiments.reproduce theta               # Gemma at every theta; the policies assembled
-    python -m expreuse.experiments.reproduce expert_store        # base store of the system benchmarks
+    python -m expreuse.experiments.reproduce theta
+    python -m expreuse.experiments.reproduce expert_store
     python -m expreuse.experiments.reproduce all
-
-Results go to results/<experiment>/<condition>.jsonl and are summarized in results/<experiment>/summary.csv.
-The producers' stores (`collect_stores`) must exist before the other experiments run.
 """
 from __future__ import annotations
 

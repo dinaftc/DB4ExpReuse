@@ -1,5 +1,5 @@
-"""The experiment grid: every condition has a distinct name, the command line builds the same conditions,
-and the store files follow the naming the producers' collection writes."""
+"""The experiment grid: every condition has a distinct name, the command line builds the same conditions, and
+the store files follow the naming the producers' collection writes."""
 from expreuse import config
 from expreuse.experiments import run
 from expreuse.experiments.grid import EXPERIMENTS, Condition, cross_application, same_application

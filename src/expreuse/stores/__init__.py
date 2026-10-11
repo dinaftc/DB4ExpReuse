@@ -6,8 +6,7 @@ REALIZATIONS = ("memory", "relational", "jsonb", "qdrant")
 
 def make_store(kind: str, dim: int, dsn: str | None = None, url: str | None = None,
                **options) -> ExperienceStore:
-    """Open a physical realization. `dsn` is the PostgreSQL connection string
-    (relational, jsonb); `url` is the Qdrant endpoint (in-process if omitted)."""
+    """`dsn`: PostgreSQL connection string; `url`: Qdrant endpoint (in-process if omitted)."""
     if kind == "memory":
         return MemoryStore()
     if kind == "relational":

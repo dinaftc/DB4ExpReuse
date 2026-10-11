@@ -165,7 +165,7 @@ def test_run_task_stores_then_reuses(embedder):
     second = run_task(app, consumer, Task("t2", "toy", "store the key"), embedder,
                       store, config)
     assert second.success and consumer.experience.route == "whole"
-    assert store.counts()["traces"] == 1  # not stored without store_as
+    assert store.counts()["traces"] == 1
 
     item = first.stored
     assert to_json(from_json(to_json(item))) == to_json(item)

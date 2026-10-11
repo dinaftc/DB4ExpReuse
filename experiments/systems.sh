@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# Physical realizations: retrieval and insertion latency as the store grows, throughput under concurrent clients,
-# and approximate goal search (Section 4.5). The base store is the traces ALFWorld's handcoded expert leaves on the
-# public training games (about 3.6K traces), collected here once (resumes if interrupted); it is then grown by
-# copying traces to each size (bench.common.scaled). Set TRACES to start from another trace file.
+# Latency, concurrency and approximate-search benchmarks. Set TRACES to start from another trace file.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PY=${PY:-python}; STORES=${STORES:-stores}; RESULTS=${RESULTS:-results}

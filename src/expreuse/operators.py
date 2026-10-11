@@ -1,8 +1,4 @@
-"""Operator libraries and signatures (Table 2).
-
-Operators are stored under a canonical name so that applications naming the
-same operation differently (take / pick up, put / move) share subtraces.
-"""
+"""Operator libraries and signatures."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

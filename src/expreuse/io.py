@@ -42,8 +42,7 @@ def write_jsonl(path: str | Path, items: Iterable[StoredTrace]) -> None:
 
 
 def read_jsonl(path: str | Path, embedder: Embedder | None = None, batch: int = 512) -> Iterator[StoredTrace]:
-    """Embeddings are not serialized; pass an embedder to recompute them. The distinct goals of the file are
-    embedded in batches, so a large file costs one model call per `batch` goals rather than one per trace."""
+    """Embeddings are not serialized; pass an embedder to recompute them."""
     with open(path) as f:
         rows = [json.loads(line) for line in f if line.strip()]
     vectors: dict[str, np.ndarray] = {}

@@ -22,9 +22,7 @@ def _usage_counter() -> dict[str, int]:
 
 
 class OpenAIChatModel:
-    """Any OpenAI-compatible chat endpoint (vLLM, Ollama, hosted APIs). `extra` goes into the request body
-    (for OpenRouter: the provider order, the reasoning switch, see `openrouter_options`). `usage` accumulates
-    the tokens of all calls."""
+    """Any OpenAI-compatible chat endpoint (vLLM, Ollama, hosted APIs)."""
 
     def __init__(self, model: str, base_url: str | None = None, api_key: str | None = None,
                  temperature: float = 0.0, max_tokens: int = 64, timeout: float | None = None,

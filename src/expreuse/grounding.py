@@ -1,6 +1,5 @@
-"""Grounding (Section 3.3): map the entities of a stored binding to the
-entities bound to the same operator roles in the target task, and substitute
-them into the stored actions."""
+"""Grounding: map the entities of a stored binding to the entities bound to the same operator roles in the
+target task, and substitute them into the stored actions."""
 from __future__ import annotations
 
 import re
@@ -16,8 +15,8 @@ def entity_mapping(stored: dict[str, str], target: dict[str, str]) -> dict[str, 
 
 
 def substitute(text: str, mapping: dict[str, str]) -> str:
-    """Replace whole-entity occurrences in one pass, so that a mapping such as
-    {mug 2 -> mug 4, mug 4 -> mug 1} does not chain."""
+    """Replace whole-entity occurrences in one pass, so that a mapping such as {mug 2 -> mug 4, mug 4 -> mug
+    1} does not chain."""
     if not mapping:
         return text
     names = sorted(mapping, key=len, reverse=True)
@@ -32,13 +31,7 @@ def _apply(steps: list[Step], mapping: dict[str, str], observations: bool) -> li
 
 
 def ground(experience: Experience, plan: Plan, observations: bool = False) -> Experience:
-    """Ground a query answer against the target plan's bindings.
-
-    A subtrace hit at plan position i is grounded against the binding of
-    position i. A complete trace is grounded by aligning its subtraces with the
-    plan positions of the same operator, in order; a stored entity keeps the
-    first target entity it is mapped to.
-    """
+    """Ground a query answer against the target plan's bindings."""
     if experience.route == "subtraces":
         for position, hits in enumerate(experience.subtraces):
             target = plan[position].binding

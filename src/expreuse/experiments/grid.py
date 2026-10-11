@@ -15,7 +15,7 @@ POLICY = {"alfworld": "dagger", "scienceworld": "imitation"}
 OTHER = {"alfworld": "scienceworld", "scienceworld": "alfworld"}
 MODES = ("none", "whole", "subtraces", "cascade")
 QUERIES = ("whole", "subtraces", "cascade")
-PLAN_SETTINGS = (False, True)  # the plan shown to a language model, or hidden
+PLAN_SETTINGS = (False, True)
 
 
 @dataclass(frozen=True)
@@ -24,17 +24,17 @@ class Condition:
     application: str
     consumer: str
     mode: str = "none"
-    source: str | None = None  # consumer whose store is read (default: the consumer's own)
-    cross_application: str | None = None  # the store comes from the other application
-    hide_plan: bool = False  # the query uses the plan but the consumer is not shown it
-    ground: bool = True  # within-application answers are grounded
-    theta: float | None = None  # Cascade's threshold (default: config.THETA)
+    source: str | None = None
+    cross_application: str | None = None
+    hide_plan: bool = False
+    ground: bool = True
+    theta: float | None = None
     k: int = config.K
-    withhold: float = 0.0  # share of a Subtraces answer withheld
-    schedule: str = "all"  # every subset of that size, or one nested random ordering per task
-    tasks: str | None = None  # task list (default: the application's evaluation list); "all": every task of the split
-    bindings: str | None = None  # ALFWorld: where the plan's target entities come from (default: config)
-    collect: bool = False  # the consumer acts as a producer: its traces fill its own store
+    withhold: float = 0.0
+    schedule: str = "all"
+    tasks: str | None = None
+    bindings: str | None = None
+    collect: bool = False
 
     @property
     def store_consumer(self) -> str:
@@ -91,16 +91,13 @@ def collect_stores() -> Iterator[Condition]:
 
 
 def expert_store() -> Iterator[Condition]:
-    """The base store of the system benchmarks: ALFWorld's handcoded expert on every public training game. The
-    plan needs no bindings here, so the room is not scanned."""
+    """The base store of the system benchmarks."""
     yield Condition("expert_store", "alfworld", "expert", "none", hide_plan=True, tasks="all", bindings="none",
                     collect=True)
 
 
 def same_application() -> Iterator[Condition]:
-    """Each consumer with its own store: no reuse, Whole, Subtraces, Cascade (Table 3). Language models with the
-    plan shown and with it hidden; the query uses the plan either way and answers are grounded in both settings.
-    The policies run once."""
+    """Each consumer with its own store: no reuse, Whole, Subtraces, Cascade."""
     for app in config.APPLICATIONS:
         for consumer in LLMS:
             for hide in PLAN_SETTINGS:
@@ -111,9 +108,7 @@ def same_application() -> Iterator[Condition]:
 
 
 def cross_agent() -> Iterator[Condition]:
-    """A consumer reads the store of a producer of the other agent type (Table 4): Gemma reads the policy's
-    store, with the plan shown and hidden; the policy reads Gemma's. The own-store rows and the no-reuse
-    baselines are those of same_application."""
+    """A consumer reads the store of a producer of the other agent type."""
     for app in config.APPLICATIONS:
         policy = POLICY[app]
         for mode in QUERIES:
@@ -123,9 +118,7 @@ def cross_agent() -> Iterator[Condition]:
 
 
 def cross_application() -> Iterator[Condition]:
-    """On the tasks whose plans contain shared operators (Table 5): a consumer of one application reads traces
-    of the other, shown as recorded (no grounding), with Whole and Subtraces (no foreign trace reaches theta, so
-    Cascade would always fall back to Subtraces); plus the no-reuse baselines on those tasks."""
+    """A consumer of one application reads traces of the other, ungrounded, on the tasks with shared operators."""
     for app in config.APPLICATIONS:
         tasks, other, policy = config.APPLICATIONS[app]["cross_application_tasks"], OTHER[app], POLICY[app]
         for hide in PLAN_SETTINGS:
@@ -141,8 +134,7 @@ def cross_application() -> Iterator[Condition]:
 
 
 def theta() -> Iterator[Condition]:
-    """Cascade's threshold (Table 7): Gemma plays Cascade at every level, with the plan shown and hidden. A
-    policy is deterministic, so its curve is assembled exactly from its same_application results (`reproduce`)."""
+    """Cascade's threshold: Gemma plays Cascade at every level, with the plan shown and hidden."""
     for app in config.APPLICATIONS:
         for hide in PLAN_SETTINGS:
             for level in config.THETA_LEVELS:
@@ -150,8 +142,7 @@ def theta() -> Iterator[Condition]:
 
 
 def depth() -> Iterator[Condition]:
-    """Retrieval depth K beyond config.K (whose conditions are same_application's): Ministral on ScienceWorld
-    among the language models, both policies."""
+    """Retrieval depth K beyond config.K (whose conditions are same_application's)."""
     for k in config.K_LEVELS["llm"]:
         if k != config.K:
             for mode in ("whole", "subtraces"):
@@ -164,9 +155,8 @@ def depth() -> Iterator[Condition]:
 
 
 def coverage() -> Iterator[Condition]:
-    """Partial subtrace coverage (Figure 4): a share of each Subtraces answer withheld, for Gemma (plan shown and
-    hidden) and the policy. ALFWorld answers are short, so every subset of that size is played and averaged;
-    ScienceWorld uses one nested random ordering per task. The full answer is same_application's Subtraces."""
+    """Partial subtrace coverage: a share of each Subtraces answer withheld, for Gemma (plan shown and hidden)
+    and the policy."""
     for app in config.APPLICATIONS:
         schedule = "all" if app == "alfworld" else "nested"
         for fraction in config.COVERAGE_LEVELS:

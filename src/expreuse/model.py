@@ -1,4 +1,4 @@
-"""Logical data model (Section 3.1) and the shapes returned by reuse queries."""
+"""Logical data model and the shapes returned by reuse queries."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -35,11 +35,11 @@ class Step:
 @dataclass(frozen=True)
 class Subtrace:
     trace_id: str
-    subgoal_id: int  # position of the operator instance in the task plan
-    operator: str  # canonical operator name
-    binding: dict[str, str]  # role -> concrete entity
-    finished: bool  # the environment completed the subgoal
-    fits: bool  # contains only steps belonging to its operator
+    subgoal_id: int
+    operator: str
+    binding: dict[str, str]
+    finished: bool
+    fits: bool
 
 
 @dataclass(frozen=True)
@@ -61,8 +61,8 @@ class StoredTrace:
 
 @dataclass(frozen=True)
 class PlanStep:
-    operator: str  # canonical operator name
-    binding: dict[str, str] = field(default_factory=dict)  # target entities, if known
+    operator: str
+    binding: dict[str, str] = field(default_factory=dict)
 
 
 Plan = tuple[PlanStep, ...]
@@ -70,11 +70,8 @@ Plan = tuple[PlanStep, ...]
 
 @dataclass(frozen=True)
 class ReuseRequest:
-    """A reuse query for a target task.
-
-    `applications` is the application constraint defining the eligible stored
-    tasks V; `producer` is r; `plan` lists the canonical operators of P_t.
-    """
+    """`applications` constrains the eligible stored tasks, `producer` is whose experience is requested and
+    `plan` lists the operators of the target plan."""
 
     embedding: np.ndarray
     producer: str
@@ -124,14 +121,12 @@ class ExperienceStep:
     action: str
     observation: str
     operator: str | None
-    previous: tuple[tuple[str, str], ...]  # up to two preceding (action, observation)
+    previous: tuple[tuple[str, str], ...]
 
 
 @dataclass
 class Experience:
-    """Answer of a reuse query. `subtraces[i]` holds the hits for plan position i; `similarity` is that of
-    the most similar eligible complete trace, the value Cascade compares with its threshold (set by Whole
-    and Cascade)."""
+    """Answer of a reuse query; `subtraces[i]` holds the hits for plan position i."""
 
     route: Literal["whole", "subtraces", "none"] = "none"
     traces: list[TraceHit] = field(default_factory=list)

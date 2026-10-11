@@ -1,11 +1,7 @@
-"""Cascade's threshold: task success at every theta, assembled from the Whole, Subtraces and no-reuse conditions.
+"""Cascade's threshold: task success at every theta, assembled from the Whole, Subtraces and no-reuse
+conditions.
 
     python -m expreuse.experiments.theta_sweep --whole w.jsonl --subtraces s.jsonl --none n.jsonl
-
-At theta, a task's outcome is its Whole episode when the best stored trace reaches theta, else its Subtraces
-episode when that query answered, else its episode without reuse. The assembly is exact for a deterministic
-consumer (a trained policy); for a language model served at temperature 0 it stands in for running Cascade at
-every theta, and `run.py --mode cascade --theta` runs it outright.
 """
 from __future__ import annotations
 

@@ -1,8 +1,4 @@
-"""Synthetic household-style traces in the shape of the data model.
-
-For tests and for exercising the system benchmarks without an environment.
-These are not ALFWorld traces and say nothing about task success.
-"""
+"""Synthetic household-style traces in the shape of the data model."""
 from __future__ import annotations
 
 import random

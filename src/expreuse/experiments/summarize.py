@@ -1,9 +1,6 @@
 """Task success with bootstrap standard errors, routes, steps, time and tokens of result files.
 
     python -m expreuse.experiments.summarize results/*.jsonl [--baseline results/none.jsonl] [--csv table.csv]
-
-Runs (and, in the coverage ablation, the subsets of one task) are averaged per task before tasks are resampled.
-With a baseline, the difference to it is paired by task, with wins and losses counted over tasks.
 """
 from __future__ import annotations
 
