@@ -48,3 +48,17 @@ def test_dagger_log_probs_normalise(monkeypatch):
 
     logp = np.asarray(Fake().log_probs(None, [("", "obs")], ["a", "b", "c"]))
     assert np.isclose(np.exp(logp).sum(), 1.0) and logp.argmax() == 1
+
+
+def test_temperature_fit_is_not_the_grid_bound():
+    from expreuse.policies.alfworld_dagger import GRID, fit_temperature
+
+    rng = np.random.default_rng(0)
+    logits = []
+    for _ in range(400):  # the labelled action is the top-scored one 70% of the time
+        scores = rng.normal(size=6) * 4
+        label = int(np.argmax(scores)) if rng.random() < 0.7 else int(rng.integers(6))
+        logits.append(scores - scores[label])
+    assert GRID[0] < fit_temperature(logits) < GRID[-1]
+    own_choice = [z - z.max() for z in logits]  # labels the policy's own argmax: always the lower bound
+    assert fit_temperature(own_choice) == GRID[0]

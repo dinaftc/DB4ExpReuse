@@ -122,9 +122,21 @@ class DaggerPolicy:
         return list(scores - np.log(np.exp(scores - scores.max()).sum()) - scores.max())
 
 
+GRID = np.exp(np.linspace(np.log(0.05), np.log(100), 300))
+
+
+def fit_temperature(logits: Sequence[np.ndarray]) -> float:
+    """The temperature minimising the mean negative log-likelihood of the labelled action; each entry holds a
+    state's scores minus the score of its labelled action."""
+    def nll(t):
+        return float(np.mean([np.log(np.exp(z / t - (z / t).max()).sum()) + (z / t).max() for z in logits]))
+
+    return float(min(GRID, key=nll))
+
+
 def calibrate(checkpoint: Path, app, tasks: Sequence[str], config: Path = CONFIG) -> float:
-    """Fit the temperature that minimises the negative log-likelihood of the policy's own choices on the given
-    games; written to calibration.json beside the checkpoint."""
+    """Fit the temperature on the given games: the policy plays, and at every state it visits the label is the
+    expert's action (`app.expert_action`). Written to calibration.json beside the checkpoint."""
     policy = DaggerPolicy(checkpoint, config, temperature=1.0)
     logits = []
     for task_id in tasks:
@@ -133,20 +145,20 @@ def calibrate(checkpoint: Path, app, tasks: Sequence[str], config: Path = CONFIG
         for _ in range(app.max_steps(task)):
             admissible = list(app.admissible_actions())
             scores = policy.scores(history, admissible)
-            index = int(np.argmax(scores))
-            logits.append(scores - scores[index])
-            observation, done, _ = app.step(admissible[index])
-            history.append((admissible[index], observation))
+            expert = app.expert_action()
+            if expert in admissible:
+                logits.append(scores - scores[admissible.index(expert)])
+            action = admissible[int(np.argmax(scores))]
+            observation, done, _ = app.step(action)
+            history.append((action, observation))
             if done:
                 break
-
-    def nll(t):
-        return float(np.mean([np.log(np.exp(z / t - (z / t).max()).sum()) + (z / t).max() for z in logits]))
-
-    grid = np.exp(np.linspace(np.log(0.5), np.log(100), 200))
-    temperature = float(min(grid, key=nll))
+    if not logits:
+        raise RuntimeError("no state with an expert action among the admissible ones: is the expert attached?")
+    temperature = fit_temperature(logits)
     Path(checkpoint).with_name("calibration.json").write_text(json.dumps(
-        {"temperature": round(temperature, 3), "steps": len(logits), "games": len(tasks)}))
+        {"temperature": round(temperature, 3), "steps": len(logits), "games": len(tasks),
+         "at_grid_bound": bool(temperature in (GRID[0], GRID[-1]))}))
     return temperature
 
 
@@ -171,8 +183,12 @@ def main():
     else:
         from ..envs.alfworld import AlfworldApplication
 
-        app = AlfworldApplication(split="eval_in_distribution")
-        temperature = calibrate(Path(args.checkpoint), app, app.task_ids()[: args.games])
+        from .. import config
+
+        # ALFWorld attaches its expert on the training split only; the games played are the calibration list
+        app = AlfworldApplication(split="train", bindings="none")
+        tasks = Path(config.APPLICATIONS["alfworld"]["calibration_tasks"]).read_text().split()
+        temperature = calibrate(Path(args.checkpoint), app, tasks[: args.games])
         print(f"temperature {temperature:.2f}")
 
 

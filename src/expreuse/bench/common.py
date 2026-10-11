@@ -93,6 +93,8 @@ def grow(stores, stream: Iterator[StoredTrace], stored: int, target: int, chunk:
         batch, stored = take(stream, stored, min(target, stored + chunk))
         for store in stores:
             store.insert_many(batch)
+    for store in stores:
+        store.analyze()
     return stored
 
 

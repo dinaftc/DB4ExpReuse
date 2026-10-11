@@ -40,6 +40,9 @@ class ExperienceStore(ABC):
         found = self.subtraces_for(request, list(dict.fromkeys(request.plan)))
         return [list(found.get(op, [])) for op in request.plan]
 
+    def analyze(self) -> None:
+        """Refresh the planner's statistics after a bulk load, where the realization keeps any."""
+
     def insert_many(self, items: Iterable[StoredTrace]) -> None:
         """Store several completed traces; a realization may load them in bulk."""
         for item in items:

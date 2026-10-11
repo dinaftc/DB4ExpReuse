@@ -58,6 +58,12 @@ class PostgresStore(ExperienceStore):
         self.conn.execute(ddl.replace("{dim}", str(self.dim)))
         self.conn.commit()
 
+    def analyze(self) -> None:
+        tables = self.conn.execute("SELECT tablename FROM pg_tables WHERE schemaname = %s", (self.schema,)).fetchall()
+        for (table,) in tables:
+            self.conn.execute(f'ANALYZE "{self.schema}"."{table}"')
+        self.conn.commit()
+
     def close(self) -> None:
         self.conn.close()
 
