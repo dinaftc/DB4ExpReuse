@@ -19,6 +19,7 @@ import collections
 import json
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -125,6 +126,10 @@ def bind_plan(operators: Sequence[str], goal: str, room: dict[str, list[str]] | 
     receptacles = {}
     for place in room:
         receptacles.setdefault(_type(place), place)
+    seen = {}  # objects the scan saw, by type (a lamp stands on a receptacle)
+    for contents in room.values():
+        for obj in contents:
+            seen.setdefault(_type(obj), obj)
     plan, used = [], 0
     for operator in operators:
         binding: dict[str, str] = {}
@@ -137,8 +142,10 @@ def bind_plan(operators: Sequence[str], goal: str, room: dict[str, list[str]] | 
             used += 1
             if destination_type and destination_type in receptacles:
                 binding["destination"] = receptacles[destination_type]
-        if operator in APPLIANCE_OF and APPLIANCE_OF[operator] in receptacles:
-            binding["appliance"] = receptacles[APPLIANCE_OF[operator]]
+        if operator in APPLIANCE_OF:
+            appliance = receptacles.get(APPLIANCE_OF[operator]) or seen.get(APPLIANCE_OF[operator])
+            if appliance:
+                binding["appliance"] = appliance
         plan.append(PlanStep(operator, binding))
     return tuple(plan)
 
@@ -269,36 +276,45 @@ class AlfworldLabeler:
 
 # ---------------------------------------------------------------- the environment
 
+SPLITS = {"train": "train", "valid_seen": "valid_seen", "valid_unseen": "valid_unseen",
+          "eval_in_distribution": "valid_seen", "eval_out_of_distribution": "valid_unseen"}
+
+
+def _patch_textworld() -> None:
+    """TextWorld's grammar relies on `locals().update`, which stopped working in Python 3.13."""
+    if sys.version_info < (3, 13):
+        return
+    import textworld.envs.pddl.textgen as textgen
+
+    def derive(self, context=None):
+        context = context or self.context
+        return [textgen.TerminalSymbol(eval(self.expression, vars(textgen), dict(context["variables"])))]
+
+    textgen.EvalSymbol.derive = derive
+
+
 class AlfworldApplication:
-    """The ALFWorld text environment. Task ids are the game files relative to `ALFWORLD_DATA`."""
+    """The ALFWorld text environment, one game at a time through TextWorld with ALFWorld's own wrappers (the
+    object numbering and the task information; on the training split also the handcoded expert, whose next
+    action `expert_action` reports). Task ids are the game files relative to `ALFWORLD_DATA`."""
 
     name = "alfworld"
     operators = OPERATORS
     system_prompt = SYSTEM_PROMPT
 
-    def __init__(self, split: str = "eval_out_of_distribution", seed: int = 42, bindings: str = "scan"):
-        from alfworld.agents.environment import get_environment
-
+    def __init__(self, split: str = "eval_out_of_distribution", bindings: str = "scan"):
         if bindings not in BINDINGS:
             raise ValueError(f"bindings must be one of {BINDINGS}")
-        self.split, self.seed, self.bindings = split, seed, bindings
+        _patch_textworld()
+        self.split, self.bindings = split, bindings
         self.labeler = AlfworldLabeler()
-        self._config = {
-            "dataset": {"data_path": str(DATA / "json_2.1.1/train"), "eval_id_data_path": str(DATA / "json_2.1.1/valid_seen"),
-                        "eval_ood_data_path": str(DATA / "json_2.1.1/valid_unseen"), "num_train_games": -1, "num_eval_games": -1},
-            "logic": {"domain": str(DATA / "logic/alfred.pddl"), "grammar": str(DATA / "logic/alfred.twl2")},
-            "env": {"task_types": [1, 2, 3, 4, 5, 6], "goal_desc_human_anns_prob": 0.0, "expert_type": "handcoded",
-                    "domain_randomization": False, "regen_game_files": False},
-            "general": {"training_method": "dagger", "random_seed": seed},
-            "dagger": {"training": {"max_nb_steps_per_episode": 200}},
-            "rl": {"training": {"max_nb_steps_per_episode": 200}},
-        }
-        self._tw = get_environment("AlfredTWEnv")(self._config, train_eval=split)
-        self.game_files = list(self._tw.game_files)
         self._env, self._loaded, self._info = None, None, {}
 
-    def task_ids(self) -> list[str]:
-        return [str(Path(f).resolve().relative_to(DATA.resolve())) for f in self.game_files]
+    def task_ids(self, split: str | None = None) -> list[str]:
+        """The solvable games of a split (default: the one given at construction)."""
+        folder = DATA / "json_2.1.1" / SPLITS.get(split or self.split, split or self.split)
+        return [str(game.relative_to(DATA)) for game in sorted(folder.glob("*/*/game.tw-pddl"))
+                if json.loads(game.read_text()).get("solvable", True)]
 
     def task(self, task_id: str) -> Task:
         """The task's goal, read from the game's first observation."""
@@ -307,9 +323,20 @@ class AlfworldApplication:
 
     def _load(self, task_id: str) -> str:
         if self._loaded != task_id or self._env is None:
-            self._tw.game_files = [str(DATA / task_id)]
-            self._env = self._tw.init_env(batch_size=1)
-            self._loaded = task_id
+            import textworld
+            import textworld.gym
+            from alfworld.agents.environment.alfred_tw_env import (AlfredDemangler, AlfredExpert, AlfredExpertType,
+                                                                   AlfredInfos)
+
+            self.close()
+            extras, wrappers = ["gamefile"], [AlfredDemangler(shuffle=False), AlfredInfos]
+            if self.split == "train":  # the handcoded expert, which ALFWorld attaches on this split
+                wrappers.append(AlfredExpert(expert_type=AlfredExpertType.HANDCODED))
+                extras.append("expert_plan")
+            infos = textworld.EnvInfos(won=True, admissible_commands=True, extras=extras)
+            env_id = textworld.gym.register_games([str(DATA / task_id)], infos, batch_size=1, asynchronous=False,
+                                                  max_episode_steps=10_000, wrappers=wrappers)
+            self._env, self._loaded = textworld.gym.make(env_id), task_id
         observations, info = self._env.reset()
         self._info = self._read(info)
         return observations[0]
@@ -356,7 +383,7 @@ class AlfworldApplication:
     def step(self, action: str) -> tuple[str, bool, bool]:
         observations, _, dones, info = self._env.step([action])
         self._info = self._read(info)
-        return observations[0], bool(dones[0]), self._info["won"]
+        return observations[0], bool(dones[0]) or self._info["won"], self._info["won"]
 
     def admissible_actions(self) -> Sequence[str]:
         return list(self._info.get("admissible_commands", []))
@@ -366,6 +393,11 @@ class AlfworldApplication:
 
     def operator_of(self, action: str) -> str | None:
         return self.labeler.operator_of(action)
+
+    def close(self) -> None:
+        if self._env is not None:
+            self._env.close()
+            self._env = None
 
 
 def confirm_plans(task_ids: Sequence[str], goals: dict[str, str]) -> list[tuple[str, tuple[str, ...], tuple[str, ...]]]:

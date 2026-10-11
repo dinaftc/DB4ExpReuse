@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Iterable
 
 from ..model import Experience, ReuseRequest, StoredTrace, SubtraceHit, TraceHit
 
@@ -41,18 +42,24 @@ class ExperienceStore(ABC):
         found = self.subtraces_for(request, list(dict.fromkeys(request.plan)))
         return [list(found.get(op, [])) for op in request.plan]
 
+    def insert_many(self, items: Iterable[StoredTrace]) -> None:
+        """Store several completed traces; a realization may load them in bulk."""
+        for item in items:
+            self.insert(item)
+
     def cascade(self, request: ReuseRequest, theta: float) -> Experience:
         """CASCADE: WHOLE if its best trace reaches `theta`, else SUBTRACES."""
         traces = self.whole(request)
-        if traces and traces[0].similarity >= theta:
-            return Experience("whole", traces=traces)
-        return self._subtraces_or_nothing(request)
+        best = traces[0].similarity if traces else None
+        if traces and best >= theta:
+            return Experience("whole", traces=traces, similarity=best)
+        return self._subtraces_or_nothing(request, best)
 
-    def _subtraces_or_nothing(self, request: ReuseRequest) -> Experience:
+    def _subtraces_or_nothing(self, request: ReuseRequest, similarity: float | None = None) -> Experience:
         hits = self.subtraces(request)
         if any(hits):
-            return Experience("subtraces", subtraces=hits)
-        return Experience("none")
+            return Experience("subtraces", subtraces=hits, similarity=similarity)
+        return Experience("none", similarity=similarity)
 
     def query(self, mode: str, request: ReuseRequest, theta: float | None = None
               ) -> Experience:
@@ -60,7 +67,7 @@ class ExperienceStore(ABC):
             return Experience("none")
         if mode == "whole":
             traces = self.whole(request)
-            return Experience("whole", traces=traces) if traces else Experience("none")
+            return Experience("whole", traces=traces, similarity=traces[0].similarity) if traces else Experience("none")
         if mode == "subtraces":
             return self._subtraces_or_nothing(request)
         if mode == "cascade":

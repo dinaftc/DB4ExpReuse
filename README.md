@@ -64,8 +64,8 @@ plan, reuse query, grounding, acting, segmentation, and storing the new trace.
 | Bootstrap standard errors (§4.1) | `src/expreuse/evaluation.py` |
 | Partial subtrace coverage (withholding) | `src/expreuse/ablations.py` |
 | Settings: models, serving, seeds, θ, K, m, λ, budgets | `src/expreuse/config.py` |
-| Running a condition, summaries, θ sweep | `src/expreuse/experiments/` |
-| The experiments, one script each | `experiments/*.sh` |
+| Conditions of every experiment, running them, summaries, θ sweep | `src/expreuse/experiments/` |
+| Systems benchmarks script | `experiments/systems.sh` |
 | Task lists (evaluation, store, calibration, cross-application) | `data/tasks/` |
 | Scaling, latency, concurrency, approximate search (§4.5) | `src/expreuse/bench/` |
 | Interface an application implements | `src/expreuse/envs/base.py` |
@@ -167,27 +167,34 @@ policy = ShapedPolicy(ImitationPolicy("data/models/scienceworld_imitation", app)
 
 ## Experiments
 
-Every condition is one call of `expreuse.experiments.run` (application, consumer, query, store, task list), which
-writes one JSON line per episode and resumes where it stopped; `expreuse.experiments.summarize` turns result files
-into task success with bootstrap standard errors (runs averaged per task, tasks resampled), route shares, steps,
-time per component and tokens, with paired differences, wins and losses against a baseline file. The scripts in
-`experiments/` run the conditions of each experiment:
+Every condition (application, consumer, query, store, task list) is one `Condition` of
+`expreuse.experiments.grid`, which lists the conditions of each experiment; `expreuse.experiments.run` plays
+one condition (one JSON line per episode, resuming where it stopped), `expreuse.experiments.reproduce` plays or
+lists an experiment, and `expreuse.experiments.summarize` turns result files into task success with bootstrap
+standard errors (runs averaged per task, tasks resampled), route shares, steps, time per component and tokens,
+with paired differences, wins and losses against a baseline file.
 
-| Script | Experiment |
+| Experiment | Conditions |
 |---|---|
-| `collect_stores.sh` | the producers solve the store task lists once (plan hidden, no experience); their traces are the stores |
-| `same_application.sh` | each consumer with its own store: no reuse, Whole, Subtraces, Cascade; language models with the plan shown and with it hidden; answers are grounded in both (Table 3) |
-| `cross_agent.sh` | Gemma (plan shown and hidden) reads the policy's store and each policy reads Gemma's (Table 4) |
-| `cross_application.sh` | consumers of one application read traces of the other on the tasks with shared operators, ungrounded, with Whole and Subtraces, plus the no-reuse baselines on those tasks (Table 5) |
-| `ablations.sh` | Cascade's threshold (Table 7: played at every theta by Gemma, assembled exactly by `theta_sweep` for the policies), retrieval depth K, partial subtrace coverage (Figure 4: `--withhold`, every subset on ALFWorld, one nested random ordering per task on ScienceWorld), grounding on and off on ALFWorld |
-| `systems.sh` | the physical realizations: collects the base store (ALFWorld's handcoded expert on the public training games, about 3.6K traces), then latency as it is grown to 1M subtraces, throughput under concurrent clients, approximate goal search |
+| `collect_stores` | the producers solve the store task lists once (plan hidden, no experience); their traces are the stores, `stores/<application>_<consumer>.jsonl` |
+| `same_application` | each consumer with its own store: no reuse, Whole, Subtraces, Cascade; language models with the plan shown and with it hidden; answers are grounded in both (Table 3) |
+| `cross_agent` | Gemma (plan shown and hidden) reads the policy's store and each policy reads Gemma's (Table 4) |
+| `cross_application` | consumers of one application read traces of the other on the tasks with shared operators, ungrounded, with Whole and Subtraces, plus the no-reuse baselines on those tasks (Table 5) |
+| `theta` | Cascade's threshold (Table 7): played at every θ by Gemma, assembled exactly by `theta_sweep` for the policies |
+| `depth` | retrieval depth K |
+| `coverage` | partial subtrace coverage (Figure 4): a share of each Subtraces answer withheld, every subset on ALFWorld, one nested random ordering per task on ScienceWorld |
+| `grounding` | grounding switched off on ALFWorld |
+| `expert_store` | the base store of the system benchmarks: ALFWorld's handcoded expert on the public training games (about 3.6K traces) |
+| `experiments/systems.sh` | the physical realizations: collects that base store, then latency as it is grown to 1M subtraces (every realization loaded with the same traces, answers compared), throughput under concurrent clients, approximate goal search |
 
 ```bash
 export OPENROUTER_API_KEY=...        # Gemma; Ministral is served by Amazon Bedrock from the AWS environment
-PY=.venv/bin/python STORES=stores RESULTS=results bash experiments/collect_stores.sh
-bash experiments/same_application.sh
-python -m expreuse.experiments.summarize results/same_application/alfworld_gemma_plan_*.jsonl \
-    --baseline results/same_application/alfworld_gemma_plan_none.jsonl
+python -m expreuse.experiments.reproduce same_application --list
+python -m expreuse.experiments.reproduce collect_stores
+python -m expreuse.experiments.reproduce same_application
+python -m expreuse.experiments.run --application alfworld --consumer dagger --mode cascade --k 4 --out results/x.jsonl
+python -m expreuse.experiments.summarize results/same_application/alfworld_gemma_*.jsonl \
+    --baseline results/same_application/alfworld_gemma_none.jsonl
 ```
 
 The settings live in `src/expreuse/config.py`; a command-line option of `run` overrides a value for one condition.
@@ -200,19 +207,20 @@ The settings live in `src/expreuse/config.py`; a command-line option of `run` ov
 | Language models | Gemma 4 26B-A4B-IT: `google/gemma-4-26b-a4b-it` through OpenRouter, providers Cloudflare then DeepInfra (ALFWorld) or Cloudflare (ScienceWorld); Ministral 8B: `mistralai/ministral-8b-2512` through Amazon Bedrock (`mistral.ministral-3-8b-instruct`) |
 | Serving | temperature 0, reasoning mode off, 4000 output tokens on ALFWorld and 1200 on ScienceWorld, request timeout 300 s / 600 s with 4 / 6 retries, static action interface (the action forms once, no per-step list of valid actions), an invalid action costs a step |
 | Repetitions | 3 runs of every language-model condition; the trained policies are deterministic and run once |
-| Seeds | ALFWorld environment 42; bootstrap 0; policy training 0; the coverage ordering of a task is seeded by its id |
+| Seeds | bootstrap 0; policy training 0; the coverage ordering of a task is seeded by its id; the environments are deterministic |
 | Budgets | 40 steps on ALFWorld; per task type on ScienceWorld (`STEP_BUDGET`); scans are not charged |
 | Standard errors | bootstrap over tasks, 10,000 resamples |
 | Task lists | `data/tasks/README.md` |
 
 **Stores.** A producer's store is the set of traces it left on its store task list (256 ALFWorld training games,
-149 ScienceWorld training variations), segmented into subtraces; `collect_stores.sh` writes one JSON Lines file
+149 ScienceWorld training variations), segmented into subtraces; `collect_stores` writes one JSON Lines file
 per producer and application. The scaling store of the system benchmarks (about 3.6K ALFWorld traces, grown
 synthetically to a million subtraces) was produced the same way by two further agents, a DeepSeek model and
 Ministral 3B, on ALFWorld's public training games (the `train` split of the `json_2.1.1` data distributed with
 [ALFWorld](https://github.com/alfworld/alfworld)). Those two producers are not configured here: `systems.sh`
-rebuilds a base store of the same size on the same games with ALFWorld's handcoded expert (`--consumer expert`),
-or starts from any trace file given as `TRACES`.
+rebuilds a base store of the same size on the same games with ALFWorld's handcoded expert (`expert_store`),
+or starts from any trace file given as `TRACES`. `docker-compose.yml` starts PostgreSQL with pgvector and Qdrant
+for the realizations.
 
 ## Adding an application
 
@@ -250,9 +258,8 @@ but are not the traces used in the paper.
 DSN=postgresql:///expreuse
 
 # Retrieval and insertion latency as stored subtraces grow (Figure 3a, Table 6)
-python -m expreuse.bench.latency --realization relational --dsn $DSN --sizes 2000,13000,100000,1000000
-python -m expreuse.bench.latency --realization jsonb      --dsn $DSN
-python -m expreuse.bench.latency --realization qdrant     --url http://localhost:6333
+python -m expreuse.bench.latency --realization relational,jsonb,qdrant --dsn $DSN --url http://localhost:6333 \
+    --sizes 2000,13000,100000,1000000      # every realization gets the same traces; reports whether answers agree
 
 # Throughput with concurrent clients, query-only and 90/10 query/insert (Figure 3b)
 python -m expreuse.bench.concurrency --dsn $DSN --clients 1,4,16,32,64

@@ -129,11 +129,14 @@ class ExperienceStep:
 
 @dataclass
 class Experience:
-    """Answer of a reuse query. `subtraces[i]` holds the hits for plan position i."""
+    """Answer of a reuse query. `subtraces[i]` holds the hits for plan position i; `similarity` is that of
+    the most similar eligible complete trace, the value Cascade compares with its threshold (set by Whole
+    and Cascade)."""
 
     route: Literal["whole", "subtraces", "none"] = "none"
     traces: list[TraceHit] = field(default_factory=list)
     subtraces: list[list[SubtraceHit]] = field(default_factory=list)
+    similarity: float | None = None
 
     def __bool__(self) -> bool:
         return self.route != "none"

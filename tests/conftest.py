@@ -20,7 +20,7 @@ def traces(embedder):
             + [t for t in make_traces(150, seed=2, producer="policy", embedder=embedder)])
 
 
-def _open(kind):
+def open_realization(kind, suffix=""):
     """Realizations needing a service are skipped unless it is configured:
     EXPREUSE_TEST_DSN for PostgreSQL; Qdrant runs in-process."""
     if kind in ("relational", "jsonb"):
@@ -28,7 +28,7 @@ def _open(kind):
         if not dsn:
             pytest.skip("EXPREUSE_TEST_DSN not set")
         pytest.importorskip("psycopg")
-        return make_store(kind, DIM, dsn=dsn, schema=f"expreuse_test_{kind}")
+        return make_store(kind, DIM, dsn=dsn, schema=f"expreuse_test_{kind}{suffix}")
     if kind == "qdrant":
         pytest.importorskip("qdrant_client")
     return make_store(kind, DIM)
@@ -36,7 +36,7 @@ def _open(kind):
 
 @pytest.fixture(scope="session", params=["memory", "relational", "jsonb", "qdrant"])
 def store(request, traces):
-    s = _open(request.param)
+    s = open_realization(request.param)
     s.setup(reset=True)
     for item in traces:
         s.insert(item)

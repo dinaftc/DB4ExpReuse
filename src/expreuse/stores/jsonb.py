@@ -65,9 +65,9 @@ class JsonbStore(PostgresStore):
     schema_file = "jsonb.sql"
     default_schema = "expreuse_jsonb"
 
-    def insert(self, item: StoredTrace) -> None:
-        from psycopg.types.json import Jsonb
-
+    @staticmethod
+    def _document(item: StoredTrace) -> tuple[list[str], dict]:
+        """The operators the trace has a finished, fitting subtrace for, and its document."""
         doc = {"subtraces": [], "other_steps": []}
         assigned = set()
         for sub in item.subtraces:
@@ -79,14 +79,34 @@ class JsonbStore(PostgresStore):
                 "length": len(steps), "steps": [_step(s) for s in steps]})
         doc["other_steps"] = [{**_step(s), "subgoal_id": s.subgoal_id}
                               for s in item.steps if s.subgoal_id not in assigned]
+        return sorted({s.operator for s in item.subtraces if s.finished and s.fits}), doc
+
+    def insert(self, item: StoredTrace) -> None:
+        from psycopg.types.json import Jsonb
+
+        eligible, doc = self._document(item)
         with self.conn.transaction(), self.conn.cursor() as cur:
             goal_id = self._upsert_goal(cur, item)
-            eligible = sorted({s.operator for s in item.subtraces
-                               if s.finished and s.fits})
             cur.execute("INSERT INTO trace_doc VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                         (item.trace.trace_id, item.task.task_id, goal_id,
                          item.trace.producer, item.trace.success, item.length,
                          eligible, Jsonb(doc)))
+
+    def insert_many(self, item_iterable) -> None:
+        """Bulk load with COPY, in one transaction."""
+        import json
+
+        items = list(item_iterable)
+        if not items:
+            return
+        with self.conn.transaction(), self.conn.cursor() as cur:
+            goal_ids = self._goal_ids(cur, items)
+            with cur.copy("COPY trace_doc (trace_id, task_id, goal_id, producer, success, length, operators, doc) "
+                          "FROM STDIN") as copy:
+                for i in items:
+                    eligible, doc = self._document(i)
+                    copy.write_row((i.trace.trace_id, i.task.task_id, goal_ids[(i.task.application, i.task.goal)],
+                                    i.trace.producer, i.trace.success, i.length, eligible, json.dumps(doc)))
 
     def whole(self, request: ReuseRequest) -> list[TraceHit]:
         rows = self.conn.execute(WHOLE, self._params(request)).fetchall()
@@ -122,9 +142,10 @@ class JsonbStore(PostgresStore):
         # only once WHOLE is selected.
         row = self.conn.execute(BEST_WHOLE_SIMILARITY, self._params(request)).fetchone()
         self.conn.commit()
-        if row is not None and float(row[0]) >= theta:
-            return Experience("whole", traces=self.whole(request))
-        return self._subtraces_or_nothing(request)
+        best = float(row[0]) if row is not None else None
+        if best is not None and best >= theta:
+            return Experience("whole", traces=self.whole(request), similarity=best)
+        return self._subtraces_or_nothing(request, best)
 
     def counts(self) -> dict[str, int]:
         row = self.conn.execute(

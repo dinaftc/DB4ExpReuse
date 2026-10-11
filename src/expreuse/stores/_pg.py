@@ -41,6 +41,7 @@ class PostgresStore(ExperienceStore):
         self.schema = schema or self.default_schema
         self.conn = psycopg.connect(dsn)
         ensure_pgvector(self.conn)
+        self.conn.execute("SET jit = off")  # the queries are short and index-driven; compiling them costs more
         self.conn.commit()
         self._use_schema()
 
@@ -70,6 +71,27 @@ class PostgresStore(ExperienceStore):
                RETURNING goal_id""",
             (item.task.application, item.task.goal, vector_literal(item.task.embedding)))
         return cur.fetchone()[0]
+
+    def _goal_ids(self, cur, items) -> dict[tuple[str, str], int]:
+        """Upsert the distinct goals of a batch and return (application, goal) -> goal_id."""
+        goals = {(i.task.application, i.task.goal): i.task.embedding for i in items}
+        if any(e is None for e in goals.values()):
+            raise ValueError("task has no goal embedding")
+        cur.executemany(
+            """INSERT INTO goal (application, goal, embedding) VALUES (%s, %s, %s::vector)
+               ON CONFLICT (application, goal) DO NOTHING""",
+            [(a, g, vector_literal(e)) for (a, g), e in goals.items()])
+        cur.execute("SELECT goal_id, application, goal FROM goal WHERE application = ANY(%s) AND goal = ANY(%s)",
+                    (sorted({a for a, _ in goals}), sorted({g for _, g in goals})))
+        return {(a, g): goal_id for goal_id, a, g in cur.fetchall() if (a, g) in goals}
+
+    def _copy_tasks(self, cur, items, goal_ids) -> None:
+        """Tasks through a temporary table: a task may already be stored."""
+        cur.execute("CREATE TEMP TABLE task_in (LIKE task) ON COMMIT DROP")
+        with cur.copy("COPY task_in (task_id, application, goal_id) FROM STDIN") as copy:
+            for task in {i.task.task_id: i.task for i in items}.values():
+                copy.write_row((task.task_id, task.application, goal_ids[(task.application, task.goal)]))
+        cur.execute("INSERT INTO task SELECT * FROM task_in ON CONFLICT (task_id) DO NOTHING")
 
     def _params(self, request) -> dict:
         return {"q": vector_literal(request.embedding),

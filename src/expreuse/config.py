@@ -21,7 +21,7 @@ THETA_LEVELS = (0.5, 0.6, 0.7, 0.8, 0.9)
 # Repetitions and seeds
 RUNS = 3  # repetitions of every LLM condition; a trained policy is deterministic and runs once
 BOOTSTRAP_RESAMPLES = 10_000
-SEEDS = {"alfworld_environment": 42, "bootstrap": 0, "policy_training": 0, "coverage_ordering": "task id"}
+SEEDS = {"bootstrap": 0, "policy_training": 0, "coverage_ordering": "task id"}  # the environments are deterministic
 
 APPLICATIONS = {
     "alfworld": {

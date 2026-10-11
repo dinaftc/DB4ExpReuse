@@ -17,7 +17,8 @@ from ..synthetic import make_traces
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--realization", default="relational",
-                        choices=["relational", "jsonb", "qdrant", "memory"])
+                        help="relational, jsonb, qdrant or memory; the latency benchmark takes a comma-separated "
+                             "list and checks that the realizations answer alike")
     parser.add_argument("--dsn", help="PostgreSQL connection string")
     parser.add_argument("--url", help="Qdrant endpoint")
     parser.add_argument("--traces", help="JSONL of base traces (default: synthetic)")
@@ -41,8 +42,8 @@ def load_base(args, embedder: Embedder) -> list[StoredTrace]:
     return make_traces(args.synthetic, seed=args.seed, embedder=embedder)
 
 
-def open_store(args, embedder: Embedder):
-    return make_store(args.realization, embedder.dim, dsn=args.dsn, url=args.url)
+def open_store(args, embedder: Embedder, kind: str | None = None):
+    return make_store(kind or args.realization, embedder.dim, dsn=args.dsn, url=args.url)
 
 
 def _entity_class(entity: str) -> str:
@@ -82,13 +83,29 @@ def scaled(base: list[StoredTrace], embedder: Embedder, seed: int = 0,
                       for s in item.subtraces))
 
 
-def grow(store, stream: Iterator[StoredTrace], stored: int, target: int) -> int:
-    """Insert from the stream until `target` subtraces are stored."""
+def take(stream: Iterator[StoredTrace], stored: int, target: int) -> tuple[list[StoredTrace], int]:
+    """The next traces of the stream up to `target` stored subtraces, and the new count."""
+    batch = []
     while stored < target:
         item = next(stream)
-        store.insert(item)
+        batch.append(item)
         stored += len(item.subtraces)
+    return batch, stored
+
+
+def grow(stores, stream: Iterator[StoredTrace], stored: int, target: int, chunk: int = 20_000) -> int:
+    """Load the same traces into every store until `target` subtraces are stored, `chunk` subtraces at a time."""
+    while stored < target:
+        batch, stored = take(stream, stored, min(target, stored + chunk))
+        for store in stores:
+            store.insert_many(batch)
     return stored
+
+
+def signature(experience) -> tuple:
+    """What an answer returned, independent of the realization."""
+    return (experience.route, tuple(t.trace_id for t in experience.traces),
+            tuple(tuple((h.trace_id, h.subgoal_id) for h in hits) for hits in experience.subtraces))
 
 
 def requests_from(items: list[StoredTrace], n: int, seed: int = 0, k: int = 1

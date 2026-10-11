@@ -1,7 +1,11 @@
 """Retrieval and insertion latency as the database grows (Figure 3a, Table 6).
 
-    python -m expreuse.bench.latency --realization relational --dsn postgresql:///expreuse \
-        --sizes 2000,13000,100000,1000000
+    python -m expreuse.bench.latency --realization relational,jsonb,qdrant --dsn postgresql:///expreuse \\
+        --url http://localhost:6333 --sizes 2000,13000,100000,1000000
+
+Every realization is loaded with the same traces; at each size the script reports, per realization, the
+median latency of Whole, Subtraces and Cascade over the evaluation requests, the median latency of inserting
+one completed trace, and whether its answers equal the first realization's.
 """
 from __future__ import annotations
 
@@ -10,17 +14,18 @@ import json
 import statistics
 import time
 
-from .common import (add_arguments, grow, load_base, make_embedder, open_store,
-                     requests_from, scaled)
+from .common import (add_arguments, grow, load_base, make_embedder, open_store, requests_from, scaled,
+                     signature)
 
 
-def median_ms(fn, arguments) -> float:
-    samples = []
+def timed(fn, arguments) -> tuple[float, list]:
+    """Median milliseconds of `fn` over `arguments`, and its results."""
+    samples, results = [], []
     for a in arguments:
         start = time.perf_counter()
-        fn(a)
+        results.append(fn(a))
         samples.append((time.perf_counter() - start) * 1000)
-    return statistics.median(samples)
+    return statistics.median(samples), results
 
 
 def main() -> None:
@@ -36,23 +41,31 @@ def main() -> None:
     base = load_base(args, embedder)
     requests = requests_from(base, args.queries, args.seed)
     stream = scaled(base, embedder, args.seed)
-    with open_store(args, embedder) as store:
+    stores = {kind: open_store(args, embedder, kind) for kind in args.realization.split(",")}
+    for store in stores.values():
         store.setup(reset=True)
-        stored = 0
-        for size in map(int, args.sizes.split(",")):
-            stored = grow(store, stream, stored, size)
+    stored, answers = 0, {}
+    for size in map(int, args.sizes.split(",")):
+        stored = grow(list(stores.values()), stream, stored, size)
+        fresh = None
+        for kind, store in stores.items():
             for r in requests[:20]:  # warm up
                 store.cascade(r, args.theta)
-            row = {
-                "realization": args.realization, "subtraces": stored,
-                "whole_ms": median_ms(store.whole, requests),
-                "subtraces_ms": median_ms(store.subtraces, requests),
-                "cascade_ms": median_ms(lambda r: store.cascade(r, args.theta), requests),
-            }
-            fresh = [next(stream) for _ in range(args.inserts)]
-            row["insert_ms"] = median_ms(store.insert, fresh)
-            stored += sum(len(i.subtraces) for i in fresh)
+            row = {"realization": kind, "subtraces": stored}
+            row["whole_ms"], whole = timed(store.whole, requests)
+            row["subtraces_ms"], subtraces = timed(store.subtraces, requests)
+            row["cascade_ms"], cascade = timed(lambda r: store.cascade(r, args.theta), requests)
+            answers[kind] = ([tuple(t.trace_id for t in hits) for hits in whole],
+                             [tuple(tuple((h.trace_id, h.subgoal_id) for h in hits) for hits in a)
+                              for a in subtraces], [signature(a) for a in cascade])
+            row["identical"] = answers[kind] == answers[next(iter(stores))]
+            if fresh is None:  # the same completed traces are inserted into every realization
+                fresh = [next(stream) for _ in range(args.inserts)]
+            row["insert_ms"], _ = timed(store.insert, fresh)
             print(json.dumps(row), flush=True)
+        stored += sum(len(i.subtraces) for i in fresh)
+    for store in stores.values():
+        store.close()
 
 
 if __name__ == "__main__":

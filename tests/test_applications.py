@@ -87,6 +87,9 @@ def test_alfworld_bindings_from_the_scan():
                     PlanStep("put", {"object": "mug 2", "destination": "cabinet 1"}))
     unseen = alfworld_module.bind_plan(("take", "put"), "put a statue in coffeetable", {"shelf 1": []})
     assert unseen == (PlanStep("take"), PlanStep("put"))
+    lamp = alfworld_module.bind_plan(("take", "use"), "look at bowl under the desklamp",
+                                     {"desk 1": ["desklamp 1", "bowl 2"], "shelf 1": []})
+    assert lamp == (PlanStep("take", {"object": "bowl 2", "source": "desk 1"}), PlanStep("use", {"appliance": "desklamp 1"}))
 
 
 def test_alfworld_pddl_confirms_the_goal_plan(tmp_path, monkeypatch):

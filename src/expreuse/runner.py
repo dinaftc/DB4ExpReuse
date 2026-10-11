@@ -32,6 +32,7 @@ class Episode:
     experience: Experience
     stored: StoredTrace
     seconds: dict[str, float] = field(default_factory=dict)  # per component
+    plan: Plan = ()
 
 
 def retrieve(store: ExperienceStore, task: Task, plan: Plan, config: ReuseConfig
@@ -94,4 +95,4 @@ def run_task(app: Application, consumer: Consumer, task: Task, embedder: Embedde
                          steps, subtraces)
     if store is not None and store_as:
         store.insert(stored)
-    return Episode(task, success, experience, stored, seconds)
+    return Episode(task, success, experience, stored, seconds, plan)

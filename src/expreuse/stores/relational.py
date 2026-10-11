@@ -73,6 +73,30 @@ class RelationalStore(PostgresStore):
                 [(s.trace_id, s.step_index, s.subgoal_id, s.action, s.observation)
                  for s in item.steps])
 
+    def insert_many(self, item_iterable) -> None:
+        """Bulk load with COPY, in one transaction."""
+        import json
+
+        items = list(item_iterable)
+        if not items:
+            return
+        with self.conn.transaction(), self.conn.cursor() as cur:
+            goal_ids = self._goal_ids(cur, items)
+            self._copy_tasks(cur, items, goal_ids)
+            with cur.copy("COPY trace (trace_id, task_id, producer, success, length) FROM STDIN") as copy:
+                for i in items:
+                    copy.write_row((i.trace.trace_id, i.trace.task_id, i.trace.producer, i.trace.success, i.length))
+            with cur.copy("COPY subtrace (trace_id, subgoal_id, operator, binding, finished, fits, length) "
+                          "FROM STDIN") as copy:
+                for i in items:
+                    for s in i.subtraces:
+                        copy.write_row((s.trace_id, s.subgoal_id, s.operator, json.dumps(s.binding), s.finished,
+                                        s.fits, len(i.subtrace_steps(s.subgoal_id))))
+            with cur.copy("COPY step (trace_id, step_index, subgoal_id, action, observation) FROM STDIN") as copy:
+                for i in items:
+                    for s in i.steps:
+                        copy.write_row((s.trace_id, s.step_index, s.subgoal_id, s.action, s.observation))
+
     def _steps(self, cur, trace_ids) -> dict[str, list[Step]]:
         steps = defaultdict(list)
         if trace_ids:

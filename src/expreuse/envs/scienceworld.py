@@ -382,6 +382,9 @@ class ScienceWorldApplication:
     def operator_of(self, action: str) -> str | None:
         return self.labeler.operator_of(action)
 
+    def close(self) -> None:
+        self._env.close()
+
 
 def _room_name(look: str) -> str:
     match = _ROOM.search(look or "")
